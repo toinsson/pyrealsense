@@ -72,39 +72,45 @@ static PyObject *deleteContext(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static int32_t dW = 320;
-static int32_t dH = 240;
-static int32_t cW = 640;
-static int32_t cH = 480;
-static int dshmsz = dW*dH*sizeof(int16_t);
-int16_t depthMapClone[320*240];
+// static int32_t dW = 320;
+// static int32_t dH = 240;
+// static int32_t cW = 640;
+// static int32_t cH = 480;
+// static int dshmsz = dW*dH*sizeof(int16_t);
+// int16_t depthMapClone[320*240];
 
-
+static PyObject *getDepthScale(PyObject *self, PyObject *args)
+{
+    rs_wait_for_frames(dev, &e);
+    check_error();
+    float scale = rs_get_device_depth_scale(dev, &e);
+    return PyFloat_FromDouble(scale);
+}
 
 static PyObject *getDepth(PyObject *self, PyObject *args)
 {
     rs_wait_for_frames(dev, &e);
     check_error();
 
-    printf("new frame\n");
+    // printf("new frame\n");
 
-    rs_get_device_depth_scale(dev, &e);
-    printf("get device depth scale\n");
+    float scale = rs_get_device_depth_scale(dev, &e);
+    // printf("get device depth scale\n");
 
-    rs_get_frame_data(dev, RS_STREAM_DEPTH, &e);
-    printf("get frame rs_get_frame_data\n");
+    // rs_get_frame_data(dev, RS_STREAM_DEPTH, &e);
+    // printf("get frame rs_get_frame_data\n");
 
-    // npy_intp dims[2] = {640, 480};
+    npy_intp dims[2] = {480, 640};
     // memcpy(depthMapClone, rs_get_frame_data(dev, RS_STREAM_DEPTH, &e), dshmsz);
 
     // printf("memcpy");
 
-    // return PyArray_SimpleNewFromData(
-    //     2,
-    //     dims,
-    //     NPY_UINT16,
-    //     depthMapClone
-    //     );
+    return PyArray_SimpleNewFromData(
+        2,
+        dims,
+        NPY_UINT16,
+        (void*) rs_get_frame_data(dev, RS_STREAM_DEPTH, &e)
+        );
 
     return Py_None;
     // npy_intp dims[2] = {dH, dW};
@@ -115,12 +121,8 @@ static PyObject *getDepth(PyObject *self, PyObject *args)
 static PyMethodDef RealSenseMethods[] = {
     // GET MAPS
     {"get_depth_map",  getDepth, METH_VARARGS, "Get Depth Map"},
-    // {"getColourMap",  getColour, METH_VARARGS, "Get Colour Map"},
-    // {"getVertices",  getVertex, METH_VARARGS, "Get Vertex Map"},
-    // {"getVerticesFP",  getVertexFP, METH_VARARGS, "Get Floating Point Vertex Map"},
-    // {"getUVMap",  getUV, METH_VARARGS, "Get UV Map"},
-    // {"getSyncMap",  getSync, METH_VARARGS, "Get Colour Overlay Map"},
-    // {"getAcceleration",  getAccel, METH_VARARGS, "Get Acceleration"},
+    {"get_depth_scale",  getDepthScale, METH_VARARGS, "Get Depth Scale"},
+
     // // CREATE MODULE
     {"start", createContext, METH_VARARGS, "Start RealSense"},
     {"close", deleteContext, METH_VARARGS, "Close DepthSense"},
