@@ -111,6 +111,7 @@ static PyObject *getDepth(PyObject *self, PyObject *args)
 
 float pointcloud[480*640*3];
 
+
 static PyObject *getPointCloud(PyObject *self, PyObject *args)
 {
     rs_wait_for_frames(dev, &e);
@@ -134,10 +135,7 @@ static PyObject *getPointCloud(PyObject *self, PyObject *args)
     float scale = rs_get_device_depth_scale(dev, &e);
     check_error();
 
-
     int dx, dy;
-    // printf("height : %d width %d\n", depth_intrin.height, depth_intrin.width);
-
     for(dy=0; dy<depth_intrin.height; ++dy)
     {
         for(dx=0; dx<depth_intrin.width; ++dx)
@@ -145,7 +143,7 @@ static PyObject *getPointCloud(PyObject *self, PyObject *args)
             pointcloud[dy*640*3 + 3*dx + 0] = 0;
             pointcloud[dy*640*3 + 3*dx + 1] = 0;
             pointcloud[dy*640*3 + 3*dx + 2] = 0;
-            // printf("dx: %d dy: %d\n", dx, dy);
+
             /* Retrieve the 16-bit depth value and map it into a depth in meters */
             uint16_t depth_value = depth_image[dy * depth_intrin.width + dx];
             float depth_in_meters = depth_value * scale;
@@ -166,8 +164,6 @@ static PyObject *getPointCloud(PyObject *self, PyObject *args)
             pointcloud[dy*640*3 + 3*dx + 2] = depth_point[2];
         }
     }
-
-    // return Py_None;
 
     npy_intp dims[3] = {640, 480, 3};
 
