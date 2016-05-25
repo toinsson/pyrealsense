@@ -3,7 +3,7 @@
 
 
 // Python Module includes
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+// #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -51,30 +51,36 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     int d_height = 480;
     int d_fps = 60;
 
+
+    int depth_control_preset = 0;
     int ivcam_preset = 4;  // optimised gesture recognition
 
     static char *kwlist[] = {"c_height", "c_width", "c_fps",
                              "d_height", "d_width", "d_fps",
-                             "ivcam_preset",
+                             "depth_control_preset", "ivcam_preset",
                              NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|iiiiiii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|iiiiiiii", kwlist,
                                      &c_height, &c_width, &c_fps,
                                      &d_height, &d_width, &d_fps,
-                                     &ivcam_preset
+                                     &depth_control_preset, &ivcam_preset
                                      ))
         return NULL;
 
     printf("c_height %d, c_width %d c_fps %d\n", c_height, c_width, c_fps);
     printf("d_height %d, d_width %d d_fps %d\n", d_height, d_width, d_fps);
-    printf("ivcam_preset %d \n", ivcam_preset);
+    printf("depth_control_preset %d ivcam_preset %d \n", depth_control_preset, ivcam_preset);
 
     /* Create a context object. This object owns the handles to all connected realsense devices. */
     ctx = rs_create_context(RS_API_VERSION, &e);
     check_error();
     // printf("There are %d connected RealSense devices.\n", rs_get_device_count(ctx, &e));
     // check_error();
-    if(rs_get_device_count(ctx, &e) == 0) return Py_None;
+    if(rs_get_device_count(ctx, &e) == 0)
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 
     /* Create a device object. */
     dev = rs_get_device(ctx, 0, &e);
@@ -87,6 +93,8 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     // check_error();
 
     // try out different options - SR300 are in preset 0 to 9
+    rs_apply_depth_control_preset(dev, depth_control_preset);
+    check_error();
     rs_apply_ivcam_preset(dev, ivcam_preset);
     check_error();
 
@@ -125,6 +133,7 @@ static PyObject *delete_context(PyObject *self, PyObject *args)
     // printf("There are %d connected RealSense devices.\n", rs_get_device_count(ctx, &e));
     rs_delete_context(ctx, &e);
 
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -135,6 +144,72 @@ static PyObject *get_depth_scale(PyObject *self, PyObject *args)
     check_error();
     float scale = rs_get_device_depth_scale(dev, &e);
     return PyFloat_FromDouble(scale);
+}
+
+// local memory space for the uv map
+uint16_t uvmap[640*480*2];
+
+static PyObject *get_uvmap(PyObject *self, PyObject *args)
+{
+    PyArrayObject *depth_p = NULL;
+    PyArrayObject *colour_p = NULL;
+
+    // get the depth and colour image
+    if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &depth_p,
+                                        &PyArray_Type, &colour_p))
+        return NULL;
+
+    // check we got correct dims
+    if (!(depth_p->nd == 2)) return NULL;
+
+    memset(uvmap, 0, sizeof(uvmap));
+
+    int dx, dy;
+    for(dy=0; dy<depth_intrin.height; ++dy)
+    {
+        for(dx=0; dx<depth_intrin.width; ++dx)
+        {
+            /* Retrieve the 16-bit depth value and map it into a depth in meters */
+            uint16_t depth_value = *(depth_p->data + dy * depth_intrin.width + dx);
+            float depth_in_meters = depth_value * scale;
+
+            /* Skip over pixels with a depth value of zero, which is used to indicate no data */
+            if(depth_value == 0)
+            {
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = 0;
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = 0;
+            }
+
+            /* Map from pixel coordinates in the depth image to pixel coordinates in the color image */
+            float depth_pixel[2] = {(float)dx, (float)dy};
+            float depth_point[3], color_point[3], color_pixel[2];
+            rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
+            rs_transform_point_to_point(color_point, &depth_to_color, depth_point);
+            rs_project_point_to_pixel(color_pixel, &color_intrin, color_point);
+
+            /* Use the color from the nearest color pixel, or pure white if this point falls outside the color image */
+            const int cx = (int)roundf(color_pixel[0]), cy = (int)roundf(color_pixel[1]);
+            if(cx < 0 || cy < 0 || cx >= color_intrin.width || cy >= color_intrin.height)
+            {
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = 0;
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = 0;
+            }
+            else
+            {
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = cx;
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = cy;
+            }
+        }
+    }
+
+    npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 2};
+
+    return PyArray_SimpleNewFromData(
+        3,
+        dims,
+        NPY_UINT16,
+        (void*) &uvmap
+        );
 }
 
 
@@ -156,8 +231,8 @@ static PyObject *get_colour(PyObject *self, PyObject *args)
 
 static PyObject *get_depth(PyObject *self, PyObject *args)
 {
-    rs_wait_for_frames(dev, &e);
-    check_error();
+    // rs_wait_for_frames(dev, &e);
+    // check_error();
 
     npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
 
@@ -171,7 +246,6 @@ static PyObject *get_depth(PyObject *self, PyObject *args)
 
 // local memory space for pointcloud - allocate max possible
 float pointcloud[640*480*3];
-
 
 static PyObject *get_pointcloud(PyObject *self, PyObject *args)
 {
@@ -230,6 +304,9 @@ static PyMethodDef RealSenseMethods[] = {
     {"get_colour",  get_colour, METH_VARARGS, "Get Colour Map"},
     {"get_depth",  get_depth, METH_VARARGS, "Get Depth Map"},
     {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get Point Cloud"},
+
+
+    {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
 
 
     {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
