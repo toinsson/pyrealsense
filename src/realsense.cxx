@@ -11,10 +11,7 @@
 #include "rsutil.h"
 
 // global variables
-rs_context * ctx = NULL;
 rs_error * e = 0;
-rs_device * dev = NULL;
-
 void check_error()
 {
     if(e)
@@ -28,16 +25,50 @@ void check_error()
 
 /*
 TODO: 
-- make create_context more flexible, that is choice of resolution and framerate as well as choice
-of config parameters
 - compute the uv and vu mapping on startup and make accessible, they are constant for the duration
 of the program
 - wrap the extrinsic and intrinsic structures
-
 */
 
-static PyObject *create_context(PyObject *self, PyObject *args)
+// global variables
+rs_context * ctx = NULL;
+rs_device * dev = NULL;
+
+rs_intrinsics depth_intrin, color_intrin;
+rs_extrinsics depth_to_color;
+
+float scale;
+
+
+static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds)
 {
+    // parse arguments
+    int c_width = 640;
+    int c_height = 480;
+    int c_fps = 60;
+
+    int d_width = 640;
+    int d_height = 480;
+    int d_fps = 60;
+
+    int ivcam_preset = 4;  // optimised gesture recognition
+
+    static char *kwlist[] = {"c_height", "c_width", "c_fps",
+                             "d_height", "d_width", "d_fps",
+                             "ivcam_preset",
+                             NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|iiiiiii", kwlist,
+                                     &c_height, &c_width, &c_fps,
+                                     &d_height, &d_width, &d_fps,
+                                     &ivcam_preset
+                                     ))
+        return NULL;
+
+    printf("c_height %d, c_width %d c_fps %d\n", c_height, c_width, c_fps);
+    printf("d_height %d, d_width %d d_fps %d\n", d_height, d_width, d_fps);
+    printf("ivcam_preset %d \n", ivcam_preset);
+
     /* Create a context object. This object owns the handles to all connected realsense devices. */
     ctx = rs_create_context(RS_API_VERSION, &e);
     check_error();
@@ -56,26 +87,35 @@ static PyObject *create_context(PyObject *self, PyObject *args)
     // check_error();
 
     // try out different options - SR300 are in preset 0 to 9
-    int option = 4; 
-    printf("using option %d\n", option);
-    rs_apply_ivcam_preset(dev, option);
+    rs_apply_ivcam_preset(dev, ivcam_preset);
     check_error();
 
 
 
     /* Configure all streams to run at VGA resolution at 60 frames per second */
-    rs_enable_stream(dev, RS_STREAM_DEPTH, 640, 480, RS_FORMAT_Z16, 60, &e);
+    rs_enable_stream(dev, RS_STREAM_DEPTH, d_width, d_height, RS_FORMAT_Z16, d_fps, &e);
     check_error();
-    rs_enable_stream(dev, RS_STREAM_COLOR, 640, 480, RS_FORMAT_RGB8, 60, &e);
+    rs_enable_stream(dev, RS_STREAM_COLOR, c_width, c_height, RS_FORMAT_RGB8, c_fps, &e);
     check_error();
-    rs_enable_stream(dev, RS_STREAM_INFRARED, 640, 480, RS_FORMAT_Y8, 60, &e);
+    rs_enable_stream(dev, RS_STREAM_INFRARED, d_width, d_height, RS_FORMAT_Y8, c_fps, &e);
     check_error();
-    rs_enable_stream(dev, RS_STREAM_INFRARED2, 640, 480, RS_FORMAT_Y8, 60, NULL); /* Pass NULL to ignore errors */
+    rs_enable_stream(dev, RS_STREAM_INFRARED2, d_width, d_height, RS_FORMAT_Y8, c_fps, NULL); /* Pass NULL to ignore errors */
     rs_start_device(dev, &e);
     check_error();
 
-    return Py_None;
+    /* Retrieve camera parameters for mapping between depth and color */
+    // store locally at startup - this is static over porgram exec
+    rs_get_stream_intrinsics(dev, RS_STREAM_DEPTH, &depth_intrin, &e);
+    check_error();
+    rs_get_device_extrinsics(dev, RS_STREAM_DEPTH, RS_STREAM_COLOR, &depth_to_color, &e);
+    check_error();
+    rs_get_stream_intrinsics(dev, RS_STREAM_COLOR, &color_intrin, &e);
+    check_error();
 
+    scale = rs_get_device_depth_scale(dev, &e);
+    check_error();
+
+    return Py_None;
 }
 
 
@@ -103,7 +143,7 @@ static PyObject *get_colour(PyObject *self, PyObject *args)
     rs_wait_for_frames(dev, &e);
     check_error();
 
-    npy_intp dims[3] = {480, 640, 3};
+    npy_intp dims[3] = {color_intrin.height, color_intrin.width, 3};
 
     return PyArray_SimpleNewFromData(
         3,
@@ -119,7 +159,7 @@ static PyObject *get_depth(PyObject *self, PyObject *args)
     rs_wait_for_frames(dev, &e);
     check_error();
 
-    npy_intp dims[2] = {480, 640};
+    npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
 
     return PyArray_SimpleNewFromData(
         2,
@@ -129,8 +169,8 @@ static PyObject *get_depth(PyObject *self, PyObject *args)
         );
 }
 
-// local memory space for pointcloud
-float pointcloud[480*640*3];
+// local memory space for pointcloud - allocate max possible
+float pointcloud[640*480*3];
 
 
 static PyObject *get_pointcloud(PyObject *self, PyObject *args)
@@ -142,23 +182,12 @@ static PyObject *get_pointcloud(PyObject *self, PyObject *args)
     const uint16_t * depth_image = (const uint16_t *)rs_get_frame_data(dev, RS_STREAM_DEPTH, &e);
     check_error();
 
-    /* Retrieve camera parameters for mapping between depth and color */
-    rs_intrinsics depth_intrin, color_intrin;
-    rs_extrinsics depth_to_color;
-    rs_get_stream_intrinsics(dev, RS_STREAM_DEPTH, &depth_intrin, &e);
-    check_error();
-    rs_get_device_extrinsics(dev, RS_STREAM_DEPTH, RS_STREAM_COLOR, &depth_to_color, &e);
-    check_error();
-    rs_get_stream_intrinsics(dev, RS_STREAM_COLOR, &color_intrin, &e);
-    check_error();
-    float scale = rs_get_device_depth_scale(dev, &e);
-    check_error();
 
     memset(pointcloud, 0, sizeof(pointcloud));
     // could be in the lopp too
-            // pointcloud[dy*640*3 + 3*dx + 0] = 0;
-            // pointcloud[dy*640*3 + 3*dx + 1] = 0;
-            // pointcloud[dy*640*3 + 3*dx + 2] = 0;
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 0] = 0;
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 1] = 0;
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 2] = 0;
 
     int dx, dy;
     for(dy=0; dy<depth_intrin.height; ++dy)
@@ -179,13 +208,13 @@ static PyObject *get_pointcloud(PyObject *self, PyObject *args)
             rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
 
             /* store a vertex at the 3D location of this depth pixel */
-            pointcloud[dy*640*3 + 3*dx + 0] = depth_point[0];
-            pointcloud[dy*640*3 + 3*dx + 1] = depth_point[1];
-            pointcloud[dy*640*3 + 3*dx + 2] = depth_point[2];
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 0] = depth_point[0];
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 1] = depth_point[1];
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 2] = depth_point[2];
         }
     }
 
-    npy_intp dims[3] = {640, 480, 3};
+    npy_intp dims[3] = {depth_intrin.width, depth_intrin.height, 3};
 
     return PyArray_SimpleNewFromData(
         3,
@@ -206,7 +235,7 @@ static PyMethodDef RealSenseMethods[] = {
     {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
 
     // // CREATE MODULE
-    {"start", create_context, METH_VARARGS, "Start RealSense"},
+    {"start", (PyCFunction)create_context, METH_VARARGS | METH_KEYWORDS, "Start RealSense"},
     {"close", delete_context, METH_VARARGS, "Close DepthSense"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
