@@ -11,3 +11,11 @@ Simple python C extension to the [librealsense](https://github.com/IntelRealSens
     pyrs.start()  # keyword arguments supported
     
     cm = pyrs.get_colour()
+
+## caveats
+To this point, this wrapper is only compatible with:
+- Python 2.x
+- Linux architecture
+- SR300 camera
+
+It is however simple to extend it further.
