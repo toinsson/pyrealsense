@@ -52,6 +52,7 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     int d_height = 480;
     int d_fps = 60;
 
+    
 
     int depth_control_preset = 0;
     int ivcam_preset = 4;  // optimised gesture recognition
@@ -76,9 +77,9 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     ctx = rs_create_context(RS_API_VERSION, &e);
     check_error();
     // printf("There are %d connected RealSense devices.\n", rs_get_device_count(ctx, &e));
-    // check_error();
     if(rs_get_device_count(ctx, &e) == 0)
     {
+        check_error();
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -86,12 +87,12 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     /* Create a device object. */
     dev = rs_get_device(ctx, 0, &e);
     check_error();
-    // printf("\nUsing device 0, an %s\n", rs_get_device_name(dev, &e));
-    // check_error();
-    // printf("    Serial number: %s\n", rs_get_device_serial(dev, &e));
-    // check_error();
-    // printf("    Firmware version: %s\n", rs_get_device_firmware_version(dev, &e));
-    // check_error();
+    printf("\nUsing device 0, an %s\n", rs_get_device_name(dev, &e));
+    check_error();
+    printf("    Serial number: %s\n", rs_get_device_serial(dev, &e));
+    check_error();
+    printf("    Firmware version: %s\n", rs_get_device_firmware_version(dev, &e));
+    check_error();
 
     // try out different options - SR300 are in preset 0 to 9
     rs_apply_depth_control_preset(dev, depth_control_preset);
@@ -226,8 +227,8 @@ static PyObject *get_colour(PyObject *self, PyObject *args)
 
 static PyObject *get_depth(PyObject *self, PyObject *args)
 {
-    // rs_wait_for_frames(dev, &e);
-    // check_error();
+    rs_wait_for_frames(dev, &e);
+    check_error();
 
     npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
 
