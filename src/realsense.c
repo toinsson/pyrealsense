@@ -27,8 +27,9 @@ void check_error()
 
 /*
 TODO: 
-- 
+- rescale depth from get_depth - this is more or less a 1/8 or >>3 operation
 - wrap the extrinsic and intrinsic structures
+- memory statically allocated with only 1 buffer per stream
 */
 
 // global variables
@@ -51,8 +52,6 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     int d_width = 640;
     int d_height = 480;
     int d_fps = 60;
-
-    
 
     int depth_control_preset = 0;
     int ivcam_preset = 4;  // optimised gesture recognition
@@ -147,7 +146,7 @@ static PyObject *get_depth_scale(PyObject *self, PyObject *args)
 }
 
 // local memory space for the uv map
-uint16_t uvmap[640*480*2];
+uint16_t uvmap[480*640*2];
 
 static PyObject *get_uvmap(PyObject *self, PyObject *args)
 {
@@ -159,7 +158,7 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
                                         &PyArray_Type, &colour_p))
         return NULL;
 
-    // check we got correct dims
+    // check we correct object - dims, type
     if (!(depth_p->nd == 2)) return NULL;
 
     memset(uvmap, 0, sizeof(uvmap));
@@ -241,7 +240,7 @@ static PyObject *get_depth(PyObject *self, PyObject *args)
 }
 
 // local memory space for pointcloud - allocate max possible
-float pointcloud[640*480*3];
+float pointcloud[480*640*3];
 
 static PyObject *get_pointcloud(PyObject *self, PyObject *args)
 {
@@ -294,15 +293,61 @@ static PyObject *get_pointcloud(PyObject *self, PyObject *args)
         );
 }
 
+uint16_t depth_pixel_round[2];
+
+static PyObject *project_point_to_pixel(PyObject *self, PyObject *args)
+{
+    PyArrayObject *point_p = NULL;
+
+    // get the depth and colour image
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &point_p))
+        return NULL;
+
+    // check we correct object - dims, type
+    // use assert
+    if (!(point_p->nd == 1)) return NULL;
+
+    float depth_point[3];
+    depth_point[0] = ((float*)point_p->data)[0];
+    depth_point[1] = ((float*)point_p->data)[1];
+    depth_point[2] = ((float*)point_p->data)[2];
+
+    float depth_pixel[2];
+    rs_project_point_to_pixel(depth_pixel, &depth_intrin, depth_point);
+
+    const int cx = (int)roundf(depth_pixel[0]), cy = (int)roundf(depth_pixel[1]);
+    if(cx < 0 || cy < 0 || cx >= depth_intrin.width || cy >= depth_intrin.height)
+    {
+        depth_pixel_round[0] = 0;
+        depth_pixel_round[1] = 0;
+    }
+    else
+    {
+        depth_pixel_round[0] = cy;
+        depth_pixel_round[1] = cx;
+    }
+
+    npy_intp dims[1] = {2};
+
+    return PyArray_SimpleNewFromData(
+        1,
+        dims,
+        NPY_UINT16,
+        (void*) &depth_pixel_round
+        );
+}
+
 
 static PyMethodDef RealSenseMethods[] = {
     // GET MAPS
-    {"get_colour",  get_colour, METH_VARARGS, "Get Colour Map"},
-    {"get_depth",  get_depth, METH_VARARGS, "Get Depth Map"},
-    {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get Point Cloud"},
+    {"get_colour",  get_colour, METH_VARARGS, "Get colour map"},
+    {"get_depth",  get_depth, METH_VARARGS, "Get depth map"},
+    {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get point cloud"},
 
 
     {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
+
+    {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
 
 
     {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
@@ -316,7 +361,7 @@ static PyMethodDef RealSenseMethods[] = {
 
 PyMODINIT_FUNC initpyrealsense(void)
 {
-    (void) Py_InitModule("pyrealsense", RealSenseMethods);
+    (void) Py_InitModule3("pyrealsense", RealSenseMethods, "Simple C extension to librealsense.");
     import_array();
 }
 
