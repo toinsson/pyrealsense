@@ -170,15 +170,11 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
         for(dx=0; dx<depth_intrin.width; ++dx)
         {
             /* Retrieve the 16-bit depth value and map it into a depth in meters */
-            uint16_t depth_value = *(depth_p->data + dy * depth_intrin.width + dx);
+            uint16_t depth_value = ((uint16_t*) depth_p->data)[dy * depth_intrin.width + dx];
             float depth_in_meters = depth_value * scale;
 
             /* Skip over pixels with a depth value of zero, which is used to indicate no data */
-            if(depth_value == 0)
-            {
-                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = 0;
-                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = 0;
-            }
+            if(depth_value == 0) continue;
 
             /* Map from pixel coordinates in the depth image to pixel coordinates in the color image */
             float depth_pixel[2] = {(float)dx, (float)dy};
@@ -196,8 +192,8 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
             }
             else
             {
-                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = cx;
-                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = cy;
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = cy;
+                uvmap[dy*depth_intrin.width*2 + dx*2 + 1] = cx;
             }
         }
     }
