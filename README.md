@@ -17,6 +17,8 @@ It returns colour images, depth images, pointcloud and uvmap as numpy arrays.
     cm = pyrs.get_colour()
 
 ## caveats
+The memory returned from any function is statically allocated, which means that each call overwrite the previous value. Copy the buffer in user space if needed.
+
 To this point, this wrapper is only compatible with:
 - Python 2.x
 - Linux architecture
