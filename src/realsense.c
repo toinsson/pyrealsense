@@ -11,6 +11,8 @@
 #include "rsutil.h"
 
 // global variables
+void check_error(void);
+
 rs_error * e = 0;
 void check_error()
 {
@@ -25,8 +27,7 @@ void check_error()
 
 /*
 TODO: 
-- compute the uv and vu mapping on startup and make accessible, they are constant for the duration
-of the program
+- 
 - wrap the extrinsic and intrinsic structures
 */
 
@@ -97,8 +98,6 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     check_error();
     rs_apply_ivcam_preset(dev, ivcam_preset);
     check_error();
-
-
 
     /* Configure all streams to run at VGA resolution at 60 frames per second */
     rs_enable_stream(dev, RS_STREAM_DEPTH, d_width, d_height, RS_FORMAT_Z16, d_fps, &e);

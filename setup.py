@@ -45,7 +45,7 @@ else:
 
 modname = 'pyrealsense'
 libnames = ['realsense']
-sourcefiles = ['src/realsense.cxx',]# 'src/initdepthsense.cxx']
+sourcefiles = ['src/realsense.c',]# 'src/initdepthsense.cxx']
 
 module = Extension(modname,
     include_dirs = [numpy.get_include(),"/usr/local/include/librealsense"],
