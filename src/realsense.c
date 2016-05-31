@@ -137,6 +137,37 @@ static PyObject *delete_context(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *get_colour(PyObject *self, PyObject *args)
+{
+    rs_wait_for_frames(dev, &e);
+    check_error();
+
+    npy_intp dims[3] = {color_intrin.height, color_intrin.width, 3};
+
+    return PyArray_SimpleNewFromData(
+        3,
+        dims,
+        NPY_UINT8,
+        (void*) rs_get_frame_data(dev, RS_STREAM_COLOR, &e)
+        );
+}
+
+
+static PyObject *get_depth(PyObject *self, PyObject *args)
+{
+    rs_wait_for_frames(dev, &e);
+    check_error();
+
+    npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
+
+    return PyArray_SimpleNewFromData(
+        2,
+        dims,
+        NPY_UINT16,
+        (void*) rs_get_frame_data(dev, RS_STREAM_DEPTH, &e)
+        );
+}
+
 static PyObject *get_depth_scale(PyObject *self, PyObject *args)
 {
     rs_wait_for_frames(dev, &e);
@@ -144,6 +175,62 @@ static PyObject *get_depth_scale(PyObject *self, PyObject *args)
     float scale = rs_get_device_depth_scale(dev, &e);
     return PyFloat_FromDouble(scale);
 }
+
+
+// local memory space for pointcloud - allocate max possible
+float pointcloud[480*640*3];
+
+static PyObject *get_pointcloud(PyObject *self, PyObject *args)
+{
+    rs_wait_for_frames(dev, &e);
+    check_error();
+
+    /* Retrieve image data */
+    const uint16_t * depth_image = (const uint16_t *)rs_get_frame_data(dev, RS_STREAM_DEPTH, &e);
+    check_error();
+
+
+    memset(pointcloud, 0, sizeof(pointcloud));
+    // could be in the lopp too
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 0] = 0;
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 1] = 0;
+            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 2] = 0;
+
+    int dx, dy;
+    for(dy=0; dy<depth_intrin.height; ++dy)
+    {
+        for(dx=0; dx<depth_intrin.width; ++dx)
+        {
+            /* Retrieve the 16-bit depth value and map it into a depth in meters */
+            uint16_t depth_value = depth_image[dy * depth_intrin.width + dx];
+            float depth_in_meters = depth_value * scale;
+
+            /* Skip over pixels with a depth value of zero, which is used to indicate no data */
+            if(depth_value == 0) continue;
+
+            /* Map from pixel coordinates in the depth image to pixel coordinates in the color image */
+            float depth_pixel[2] = {(float)dx, (float)dy};
+            float depth_point[3];
+
+            rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
+
+            /* store a vertex at the 3D location of this depth pixel */
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 0] = depth_point[0];
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 1] = depth_point[1];
+            pointcloud[dy*depth_intrin.width*3 + dx*3 + 2] = depth_point[2];
+        }
+    }
+
+    npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
+
+    return PyArray_SimpleNewFromData(
+        3,
+        dims,
+        NPY_FLOAT,
+        (void*) &pointcloud
+        );
+}
+
 
 // local memory space for the uv map
 uint16_t uvmap[480*640*2];
@@ -206,92 +293,7 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
 }
 
 
-static PyObject *get_colour(PyObject *self, PyObject *args)
-{
-    rs_wait_for_frames(dev, &e);
-    check_error();
-
-    npy_intp dims[3] = {color_intrin.height, color_intrin.width, 3};
-
-    return PyArray_SimpleNewFromData(
-        3,
-        dims,
-        NPY_UINT8,
-        (void*) rs_get_frame_data(dev, RS_STREAM_COLOR, &e)
-        );
-}
-
-
-static PyObject *get_depth(PyObject *self, PyObject *args)
-{
-    rs_wait_for_frames(dev, &e);
-    check_error();
-
-    npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
-
-    return PyArray_SimpleNewFromData(
-        2,
-        dims,
-        NPY_UINT16,
-        (void*) rs_get_frame_data(dev, RS_STREAM_DEPTH, &e)
-        );
-}
-
-
-// local memory space for pointcloud - allocate max possible
-float pointcloud[480*640*3];
-
-static PyObject *get_pointcloud(PyObject *self, PyObject *args)
-{
-    rs_wait_for_frames(dev, &e);
-    check_error();
-
-    /* Retrieve image data */
-    const uint16_t * depth_image = (const uint16_t *)rs_get_frame_data(dev, RS_STREAM_DEPTH, &e);
-    check_error();
-
-
-    memset(pointcloud, 0, sizeof(pointcloud));
-    // could be in the lopp too
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 0] = 0;
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 1] = 0;
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 2] = 0;
-
-    int dx, dy;
-    for(dy=0; dy<depth_intrin.height; ++dy)
-    {
-        for(dx=0; dx<depth_intrin.width; ++dx)
-        {
-            /* Retrieve the 16-bit depth value and map it into a depth in meters */
-            uint16_t depth_value = depth_image[dy * depth_intrin.width + dx];
-            float depth_in_meters = depth_value * scale;
-
-            /* Skip over pixels with a depth value of zero, which is used to indicate no data */
-            if(depth_value == 0) continue;
-
-            /* Map from pixel coordinates in the depth image to pixel coordinates in the color image */
-            float depth_pixel[2] = {(float)dx, (float)dy};
-            float depth_point[3];
-
-            rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
-
-            /* store a vertex at the 3D location of this depth pixel */
-            pointcloud[dy*depth_intrin.width*3 + dx*3 + 0] = depth_point[0];
-            pointcloud[dy*depth_intrin.width*3 + dx*3 + 1] = depth_point[1];
-            pointcloud[dy*depth_intrin.width*3 + dx*3 + 2] = depth_point[2];
-        }
-    }
-
-    npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
-
-    return PyArray_SimpleNewFromData(
-        3,
-        dims,
-        NPY_FLOAT,
-        (void*) &pointcloud
-        );
-}
-
+// local memory map for the ouput pixel
 uint16_t depth_pixel_round[2];
 
 static PyObject *project_point_to_pixel(PyObject *self, PyObject *args)
@@ -341,15 +343,11 @@ static PyMethodDef RealSenseMethods[] = {
     // GET MAPS
     {"get_colour",  get_colour, METH_VARARGS, "Get colour map"},
     {"get_depth",  get_depth, METH_VARARGS, "Get depth map"},
+    {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
     {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get point cloud"},
 
-
     {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
-
     {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
-
-
-    {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
 
     // // CREATE MODULE
     {"start", (PyCFunction)create_context, METH_VARARGS | METH_KEYWORDS, "Start RealSense"},
