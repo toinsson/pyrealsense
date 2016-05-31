@@ -151,11 +151,7 @@ uint16_t uvmap[480*640*2];
 static PyObject *get_uvmap(PyObject *self, PyObject *args)
 {
     PyArrayObject *depth_p = NULL;
-    PyArrayObject *colour_p = NULL;
-
-    // get the depth and colour image
-    if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &depth_p,
-                                        &PyArray_Type, &colour_p))
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &depth_p))
         return NULL;
 
     // check we correct object - dims, type
@@ -183,7 +179,9 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
             rs_project_point_to_pixel(color_pixel, &color_intrin, color_point);
 
             /* Use the color from the nearest color pixel, or pure white if this point falls outside the color image */
-            const int cx = (int)roundf(color_pixel[0]), cy = (int)roundf(color_pixel[1]);
+            const uint16_t cx = (uint16_t)roundf(color_pixel[0]);
+            const uint16_t cy = (uint16_t)roundf(color_pixel[1]);
+
             if(cx < 0 || cy < 0 || cx >= color_intrin.width || cy >= color_intrin.height)
             {
                 uvmap[dy*depth_intrin.width*2 + dx*2 + 0] = 0;
@@ -239,6 +237,7 @@ static PyObject *get_depth(PyObject *self, PyObject *args)
         );
 }
 
+
 // local memory space for pointcloud - allocate max possible
 float pointcloud[480*640*3];
 
@@ -283,7 +282,7 @@ static PyObject *get_pointcloud(PyObject *self, PyObject *args)
         }
     }
 
-    npy_intp dims[3] = {depth_intrin.width, depth_intrin.height, 3};
+    npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
 
     return PyArray_SimpleNewFromData(
         3,
