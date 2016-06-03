@@ -19,7 +19,7 @@ It returns colour images, depth images, pointcloud and uvmap as numpy arrays.
 ## caveats
 The memory returned from any function is statically allocated, which means that each call overwrite the previous value. Copy the buffer in user space if needed.
 
-To this point, this wrapper is only compatible with:
+To this point, this wrapper has only been tested with:
 - Python 2.x
 - Linux architecture
 - SR300 camera
