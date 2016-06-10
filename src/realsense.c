@@ -12,6 +12,7 @@
 
 // global variables
 void check_error(void);
+void apply_ivcam_preset(rs_device * device, int preset);
 
 rs_error * e = 0;
 void check_error()
@@ -54,7 +55,7 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     int d_fps = 60;
 
     int depth_control_preset = 0;
-    int ivcam_preset = 4;  // optimised gesture recognition
+    int ivcam_preset = 9;  // optimised gesture recognition
 
     static char *kwlist[] = {"c_height", "c_width", "c_fps",
                              "d_height", "d_width", "d_fps",
@@ -94,9 +95,9 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     check_error();
 
     // try out different options - SR300 are in preset 0 to 9
-    rs_apply_depth_control_preset(dev, depth_control_preset);
-    check_error();
-    rs_apply_ivcam_preset(dev, ivcam_preset);
+    // rs_apply_depth_control_preset(dev, depth_control_preset);
+    // check_error();
+    apply_ivcam_preset(dev, ivcam_preset);
     check_error();
 
     /* Configure all streams to run at VGA resolution at 60 frames per second */
@@ -106,7 +107,9 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
     check_error();
     rs_enable_stream(dev, RS_STREAM_INFRARED, d_width, d_height, RS_FORMAT_Y8, c_fps, &e);
     check_error();
-    rs_enable_stream(dev, RS_STREAM_INFRARED2, d_width, d_height, RS_FORMAT_Y8, c_fps, NULL); /* Pass NULL to ignore errors */
+
+    // rs_enable_stream(dev, RS_STREAM_INFRARED2, d_width, d_height, RS_FORMAT_Y8, c_fps, NULL); /* Pass NULL to ignore errors */
+
     rs_start_device(dev, &e);
     check_error();
 
@@ -124,6 +127,16 @@ static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds
 
     return Py_None;
 }
+
+// TODO for changing option on the fly
+// static PyObject *set_device_option(PyObject *self, PyObject *args)
+// {
+//     // const double arr_values[15] = 
+//     //     {1,     1, 100,  179,  179,   2,  16,  -1, 8000, 450,  1,  1,  7,  1, -1}
+
+//     if (!PyArg_ParseTuple(args, "i", NULL, &depth_p))
+//         return NULL;
+// }
 
 
 static PyObject *delete_context(PyObject *self, PyObject *args)
@@ -177,6 +190,22 @@ static PyObject *get_depth_scale(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *get_ir(PyObject *self, PyObject *args)
+{
+    rs_wait_for_frames(dev, &e);
+    check_error();
+
+    npy_intp dims[2] = {depth_intrin.height, depth_intrin.width};
+
+    return PyArray_SimpleNewFromData(
+        2,
+        dims,
+        NPY_UINT8,
+        (void*) rs_get_frame_data(dev, RS_STREAM_INFRARED, &e)
+        );
+}
+
+
 // local memory space for pointcloud - allocate max possible
 float pointcloud[480*640*3];
 
@@ -191,10 +220,6 @@ static PyObject *get_pointcloud(PyObject *self, PyObject *args)
 
 
     memset(pointcloud, 0, sizeof(pointcloud));
-    // could be in the lopp too
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 0] = 0;
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 1] = 0;
-            // pointcloud[dy*depth_intrin.width*3 + 3*dx + 2] = 0;
 
     int dx, dy;
     for(dy=0; dy<depth_intrin.height; ++dy)
@@ -293,6 +318,54 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
 }
 
 
+
+// local memory space for pointcloud - allocate max possible
+float pointcloud_[480*640*3];
+
+static PyObject *pointcloud_from_depth(PyObject *self, PyObject *args)
+{
+    PyArrayObject *depth_p = NULL;
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &depth_p))
+        return NULL;
+
+    memset(pointcloud_, 0, sizeof(pointcloud_));
+
+    int dx, dy;
+    for(dy=0; dy<depth_intrin.height; ++dy)
+    {
+        for(dx=0; dx<depth_intrin.width; ++dx)
+        {
+            /* Retrieve the 16-bit depth value and map it into a depth in meters */
+            uint16_t depth_value = ((uint16_t*) depth_p->data)[dy * depth_intrin.width + dx];
+            float depth_in_meters = depth_value * scale;
+
+            /* Skip over pixels with a depth value of zero, which is used to indicate no data */
+            if(depth_value == 0) continue;
+
+            /* Map from pixel coordinates in the depth image to pixel coordinates in the color image */
+            float depth_pixel[2] = {(float)dx, (float)dy};
+            float depth_point[3];
+
+            rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
+
+            /* store a vertex at the 3D location of this depth pixel */
+            pointcloud_[dy*depth_intrin.width*3 + dx*3 + 0] = depth_point[0];
+            pointcloud_[dy*depth_intrin.width*3 + dx*3 + 1] = depth_point[1];
+            pointcloud_[dy*depth_intrin.width*3 + dx*3 + 2] = depth_point[2];
+        }
+    }
+
+    npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
+
+    return PyArray_SimpleNewFromData(
+        3,
+        dims,
+        NPY_FLOAT,
+        (void*) &pointcloud_
+        );
+}
+
+
 // local memory map for the ouput pixel
 uint16_t depth_pixel_round[2];
 
@@ -309,9 +382,14 @@ static PyObject *project_point_to_pixel(PyObject *self, PyObject *args)
     if (!(point_p->nd == 1)) return NULL;
 
     float depth_point[3];
+
+
     depth_point[0] = ((float*)point_p->data)[0];
     depth_point[1] = ((float*)point_p->data)[1];
     depth_point[2] = ((float*)point_p->data)[2];
+
+    printf("%f %f %f \n", depth_point[0], depth_point[1], depth_point[2]);
+
 
     float depth_pixel[2];
     rs_project_point_to_pixel(depth_pixel, &depth_intrin, depth_point);
@@ -339,15 +417,140 @@ static PyObject *project_point_to_pixel(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *get_rs_intrinsics(PyObject *self, PyObject *args)
+{
+    // typedef struct rs_intrinsics
+    // {
+    // int           width;     // width of the image in pixels 
+    // int           height;    // height of the image in pixels 
+    // float         ppx;       // horizontal coordinate of the principal point of the image, as a pixel offset from the left edge 
+    // float         ppy;       // vertical coordinate of the principal point of the image, as a pixel offset from the top edge 
+    // float         fx;        // focal length of the image plane, as a multiple of pixel width 
+    // float         fy;        // focal length of the image plane, as a multiple of pixel height 
+    // rs_distortion model;     // distortion model of the image 
+    // float         coeffs[5]; // distortion coefficients 
+    // } rs_intrinsics;
+
+    printf("%d %d %f %f %f %f %f %f %f %f %f", color_intrin.width,
+                                color_intrin.height,
+                                color_intrin.ppx,
+                                color_intrin.ppy,
+                                color_intrin.fx,
+                                color_intrin.fy,
+                                color_intrin.coeffs[0],
+                                color_intrin.coeffs[1],
+                                color_intrin.coeffs[2],
+                                color_intrin.coeffs[3],
+                                color_intrin.coeffs[4]
+                                );
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+/* Provide access to several recommend sets of option presets for ivcam */
+void apply_ivcam_preset(rs_device * device, int preset)
+{
+    const rs_option arr_options[15] = {
+        RS_OPTION_SR300_AUTO_RANGE_ENABLE_MOTION_VERSUS_RANGE,  //00
+        RS_OPTION_SR300_AUTO_RANGE_ENABLE_LASER,                //01
+        RS_OPTION_SR300_AUTO_RANGE_MIN_MOTION_VERSUS_RANGE,     //02
+        RS_OPTION_SR300_AUTO_RANGE_MAX_MOTION_VERSUS_RANGE,     //03
+        RS_OPTION_SR300_AUTO_RANGE_START_MOTION_VERSUS_RANGE,   //04
+        RS_OPTION_SR300_AUTO_RANGE_MIN_LASER,                   //05
+        RS_OPTION_SR300_AUTO_RANGE_MAX_LASER,                   //06
+        RS_OPTION_SR300_AUTO_RANGE_START_LASER,                 //07
+        RS_OPTION_SR300_AUTO_RANGE_UPPER_THRESHOLD,             //08
+        RS_OPTION_SR300_AUTO_RANGE_LOWER_THRESHOLD,             //09
+        RS_OPTION_F200_LASER_POWER,                             //10
+        RS_OPTION_F200_ACCURACY,                                //11
+        RS_OPTION_F200_FILTER_OPTION,                           //12
+        RS_OPTION_F200_CONFIDENCE_THRESHOLD,                    //13
+        RS_OPTION_F200_MOTION_RANGE                             //14
+    };
+
+    const double arr_values[][15] = {
+      //00     01   02    03    04   05   06   07    08   09  10  11  12  13  14
+         /*00 Common                 */
+        {1,     1, 180,  605,  303,   2,  16,  -1, 1250, 650,  1,  1,  5,  1, -1},
+        /* 01 ShortRange             */
+        {1,     1, 180,  303,  180,   2,  16,  -1, 1000, 450,  1,  1,  5,  1, -1},
+        /* 02 LongRange              */
+        {1,     0, 303,  605,  303,  -1,  -1,  -1, 1250, 975,  1,  1,  7,  0, -1},
+        /* 03 BackgroundSegmentation */
+        {0,     0,  -1,   -1,   -1,  -1,  -1,  -1,   -1,  -1, 16,  1,  6,  0, 22},
+        /* 04 GestureRecognition     */
+        {1,     1, 100,  179,  100,   2,  16,  -1, 1000, 450,  1,  1,  6,  3, -1},
+        /* 05 ObjectScanning         */
+        {0,     1,  -1,   -1,   -1,   2,  16,  16, 1000, 450,  1,  1,  3,  1,  9},
+        /* 06 FaceMW                 */
+        {0,     0,  -1,   -1,   -1,  -1,  -1,  -1,   -1,  -1, 16,  1,  5,  1, 22},
+        /* 07 FaceLogin              */
+        {2,     0,  40, 1600,  800,  -1,  -1,  -1,   -1,  -1,  1, -1, -1, -1, -1},
+        /* 08 GRCursorMode           */
+        {1,     1, 100,  179,  179,   2,  16,  -1, 1000, 450,  1,  1,  6,  1, -1},
+        /* 09 custom - gesture long range */
+        {1,     1, 100,  179,  100,   2,  16,  -1, 2500, 450,  1,  1,  6,  7, -1}
+    };
+
+    rs_error * e = 0;
+
+    for (int i=0; i<15; i++)
+    {
+        printf("%f ", arr_values[preset][i]);
+    }
+    printf("\n");
+
+
+    if(arr_values[preset][14] != -1)
+    {
+        rs_set_device_options(device, arr_options, 15, arr_values[preset], &e);
+        if(e)
+        {
+            printf("rs_error was raised when calling %s(%s):\n", rs_get_failed_function(e),
+                                                                 rs_get_failed_args(e));
+            printf("    %s\n", rs_get_error_message(e));
+        }
+    }
+
+    if(arr_values[preset][13] != -1)
+    {
+        rs_set_device_options(device, arr_options, 14, arr_values[preset], &e);
+        if(e)
+        {
+            printf("rs_error was raised when calling %s(%s):\n", rs_get_failed_function(e),
+                                                                 rs_get_failed_args(e));
+            printf("    %s\n", rs_get_error_message(e));
+        }
+    }
+
+    else
+    {
+        rs_set_device_options(device, arr_options, 11, arr_values[preset], &e);
+        if(e)
+        {
+            printf("rs_error was raised when calling %s(%s):\n", rs_get_failed_function(e),
+                                                                 rs_get_failed_args(e));
+            printf("    %s\n", rs_get_error_message(e));
+        }
+    }
+}
+
+
 static PyMethodDef RealSenseMethods[] = {
     // GET MAPS
     {"get_colour",  get_colour, METH_VARARGS, "Get colour map"},
     {"get_depth",  get_depth, METH_VARARGS, "Get depth map"},
+    {"get_ir",  get_ir, METH_VARARGS, "Get ir map"},
     {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
     {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get point cloud"},
 
     {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
+    {"pointcloud_from_depth",  pointcloud_from_depth, METH_VARARGS, "Get the pointcloud from depth."},
     {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
+
+    {"get_rs_intrinsics",  get_rs_intrinsics, METH_VARARGS, "Get intrinsic parameters."},
+
 
     // // CREATE MODULE
     {"start", (PyCFunction)create_context, METH_VARARGS | METH_KEYWORDS, "Start RealSense"},
