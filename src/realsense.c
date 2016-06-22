@@ -40,8 +40,10 @@ rs_device * dev = NULL;
 rs_intrinsics depth_intrin, color_intrin;
 rs_extrinsics depth_to_color;
 
+
 float scale;
 
+// static Py
 
 static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds)
 {
@@ -318,7 +320,6 @@ static PyObject *get_uvmap(PyObject *self, PyObject *args)
 }
 
 
-
 // local memory space for pointcloud - allocate max possible
 float pointcloud_[480*640*3];
 
@@ -416,6 +417,36 @@ static PyObject *project_point_to_pixel(PyObject *self, PyObject *args)
         );
 }
 
+static PyObject *get_rs_extrinsics(PyObject *self, PyObject *args)
+{
+    // typedef struct rs_extrinsics
+    // {
+    //     float rotation[9];    // column-major 3x3 rotation matrix 
+    //     float translation[3]; // 3 element translation vector, in meters 
+    // } rs_extrinsics;
+
+    printf("depth_to_color rotation[9] translation[3]\n");
+    printf("%f %f %f %f %f %f %f %f %f\n",
+    depth_to_color.rotation[0],
+    depth_to_color.rotation[1],
+    depth_to_color.rotation[2],
+    depth_to_color.rotation[3],
+    depth_to_color.rotation[4],
+    depth_to_color.rotation[5],
+    depth_to_color.rotation[6],
+    depth_to_color.rotation[7],
+    depth_to_color.rotation[8]
+    );
+
+    printf("%f %f %f\n",
+    depth_to_color.translation[0],
+    depth_to_color.translation[1],
+    depth_to_color.translation[2]
+    );
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 static PyObject *get_rs_intrinsics(PyObject *self, PyObject *args)
 {
@@ -431,7 +462,9 @@ static PyObject *get_rs_intrinsics(PyObject *self, PyObject *args)
     // float         coeffs[5]; // distortion coefficients 
     // } rs_intrinsics;
 
-    printf("%d %d %f %f %f %f %f %f %f %f %f", color_intrin.width,
+    printf("color width height ppx ppy fx fy coeffs[5]\n");
+    printf("%d %d %f %f %f %f %f %f %f %f %f\n",
+                                color_intrin.width,
                                 color_intrin.height,
                                 color_intrin.ppx,
                                 color_intrin.ppy,
@@ -443,6 +476,22 @@ static PyObject *get_rs_intrinsics(PyObject *self, PyObject *args)
                                 color_intrin.coeffs[3],
                                 color_intrin.coeffs[4]
                                 );
+
+    printf("depth width height ppx ppy fx fy coeffs[5]\n");
+    printf("%d %d %f %f %f %f %f %f %f %f %f\n",
+                            depth_intrin.width,
+                            depth_intrin.height,
+                            depth_intrin.ppx,
+                            depth_intrin.ppy,
+                            depth_intrin.fx,
+                            depth_intrin.fy,
+                            depth_intrin.coeffs[0],
+                            depth_intrin.coeffs[1],
+                            depth_intrin.coeffs[2],
+                            depth_intrin.coeffs[3],
+                            depth_intrin.coeffs[4]
+                            );
+
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -550,6 +599,7 @@ static PyMethodDef RealSenseMethods[] = {
     {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
 
     {"get_rs_intrinsics",  get_rs_intrinsics, METH_VARARGS, "Get intrinsic parameters."},
+    {"get_rs_extrinsics",  get_rs_extrinsics, METH_VARARGS, "Get extrinsic parameters."},
 
 
     // // CREATE MODULE
@@ -558,11 +608,64 @@ static PyMethodDef RealSenseMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+void init_default_rs_extrinsics_value(void);
+void init_default_rs_extrinsics_value(void)
+{
+    // save static values for calling projection functions when camera not present
+    depth_to_color.rotation[0] =  0.999998;
+    depth_to_color.rotation[1] = -0.001382;
+    depth_to_color.rotation[2] =  0.001113;
+    depth_to_color.rotation[3] =  0.001388;
+    depth_to_color.rotation[4] =  0.999982;
+    depth_to_color.rotation[5] = -0.005869;
+    depth_to_color.rotation[6] = -0.001104;
+    depth_to_color.rotation[7] =  0.005871;
+    depth_to_color.rotation[8] =  0.999982;
+
+    depth_to_color.translation[0] =  0.025700;
+    depth_to_color.translation[1] = -0.000733;
+    depth_to_color.translation[2] =  0.003885;
+}
+
+void init_default_rs_intrinsics_value(void);
+void init_default_rs_intrinsics_value(void)
+{
+    // save static values for calling projection functions when camera not present
+    color_intrin.width      = 640;
+    color_intrin.height     = 480;
+    color_intrin.ppx        = 310.672333;
+    color_intrin.ppy        = 249.916473;
+    color_intrin.fx         = 613.874634;
+    color_intrin.fy         = 613.874695;
+    color_intrin.coeffs[0]  = 0.0;
+    color_intrin.coeffs[1]  = 0.0;
+    color_intrin.coeffs[2]  = 0.0;
+    color_intrin.coeffs[3]  = 0.0;
+    color_intrin.coeffs[4]  = 0.0;
+
+    depth_intrin.width      = 640;
+    depth_intrin.height     = 480;
+    depth_intrin.ppx        = 314.796814;
+    depth_intrin.ppy        = 245.890991;
+    depth_intrin.fx         = 475.529053;
+    depth_intrin.fy         = 475.528931;
+    depth_intrin.coeffs[0]  = 0.144294;
+    depth_intrin.coeffs[1]  = 0.054764;
+    depth_intrin.coeffs[2]  = 0.004520;
+    depth_intrin.coeffs[3]  = 0.002106;
+    depth_intrin.coeffs[4]  = 0.107831;
+}
+
+
 
 PyMODINIT_FUNC initpyrealsense(void)
 {
     (void) Py_InitModule3("pyrealsense", RealSenseMethods, "Simple C extension to librealsense.");
     import_array();
+
+    // init default values
+    init_default_rs_intrinsics_value();
+    init_default_rs_extrinsics_value();
 }
 
 
