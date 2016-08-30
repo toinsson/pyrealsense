@@ -37,13 +37,10 @@ TODO:
 rs_context * ctx = NULL;
 rs_device * dev = NULL;
 
+// global camera parameters
 rs_intrinsics depth_intrin, color_intrin;
 rs_extrinsics depth_to_color;
-
-
 float scale;
-
-// static Py
 
 static PyObject *create_context(PyObject *self, PyObject *args, PyObject *keywds)
 {
@@ -608,9 +605,11 @@ static PyMethodDef RealSenseMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-void init_default_rs_extrinsics_value(void);
-void init_default_rs_extrinsics_value(void)
+void init_default_camera_parameters(void);
+void init_default_camera_parameters(void)
 {
+    scale = 0.00012498664727900177;
+
     // save static values for calling projection functions when camera not present
     depth_to_color.rotation[0] =  0.999998;
     depth_to_color.rotation[1] = -0.001382;
@@ -625,11 +624,7 @@ void init_default_rs_extrinsics_value(void)
     depth_to_color.translation[0] =  0.025700;
     depth_to_color.translation[1] = -0.000733;
     depth_to_color.translation[2] =  0.003885;
-}
 
-void init_default_rs_intrinsics_value(void);
-void init_default_rs_intrinsics_value(void)
-{
     // save static values for calling projection functions when camera not present
     color_intrin.width      = 640;
     color_intrin.height     = 480;
@@ -664,8 +659,7 @@ PyMODINIT_FUNC initpyrealsense(void)
     import_array();
 
     // init default values
-    init_default_rs_intrinsics_value();
-    init_default_rs_extrinsics_value();
+    init_default_camera_parameters();
 }
 
 
