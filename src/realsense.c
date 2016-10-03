@@ -583,28 +583,6 @@ void apply_ivcam_preset(rs_device * device, int preset)
 }
 
 
-static PyMethodDef RealSenseMethods[] = {
-    // GET MAPS
-    {"get_colour",  get_colour, METH_VARARGS, "Get colour map"},
-    {"get_depth",  get_depth, METH_VARARGS, "Get depth map"},
-    {"get_ir",  get_ir, METH_VARARGS, "Get ir map"},
-    {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
-    {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get point cloud"},
-
-    {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
-    {"pointcloud_from_depth",  pointcloud_from_depth, METH_VARARGS, "Get the pointcloud from depth."},
-    {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
-
-    {"get_rs_intrinsics",  get_rs_intrinsics, METH_VARARGS, "Get intrinsic parameters."},
-    {"get_rs_extrinsics",  get_rs_extrinsics, METH_VARARGS, "Get extrinsic parameters."},
-
-
-    // // CREATE MODULE
-    {"start", (PyCFunction)create_context, METH_VARARGS | METH_KEYWORDS, "Start RealSense"},
-    {"close", delete_context, METH_VARARGS, "Close DepthSense"},
-    {NULL, NULL, 0, NULL}        /* Sentinel */
-};
-
 void init_default_camera_parameters(void);
 void init_default_camera_parameters(void)
 {
@@ -650,6 +628,28 @@ void init_default_camera_parameters(void)
     depth_intrin.coeffs[3]  = 0.002106;
     depth_intrin.coeffs[4]  = 0.107831;
 }
+
+static PyMethodDef RealSenseMethods[] = {
+    // GET MAPS
+    {"get_colour",  get_colour, METH_VARARGS, "Get colour map"},
+    {"get_depth",  get_depth, METH_VARARGS, "Get depth map"},
+    {"get_ir",  get_ir, METH_VARARGS, "Get ir map"},
+    {"get_depth_scale",  get_depth_scale, METH_VARARGS, "Get Depth Scale"},
+    {"get_pointcloud",  get_pointcloud, METH_VARARGS, "Get point cloud"},
+
+    {"get_uvmap",  get_uvmap, METH_VARARGS, "Get UV map"},
+    {"pointcloud_from_depth",  pointcloud_from_depth, METH_VARARGS, "Get the pointcloud from depth."},
+    {"project_point_to_pixel",  project_point_to_pixel, METH_VARARGS, "Project point to pixel."},
+
+    {"get_rs_intrinsics",  get_rs_intrinsics, METH_VARARGS, "Get intrinsic parameters."},
+    {"get_rs_extrinsics",  get_rs_extrinsics, METH_VARARGS, "Get extrinsic parameters."},
+
+
+    // // CREATE MODULE
+    {"start", (PyCFunction)create_context, METH_VARARGS | METH_KEYWORDS, "Start RealSense"},
+    {"close", delete_context, METH_VARARGS, "Stop the daemon."},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
 
 
 

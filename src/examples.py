@@ -1,18 +1,19 @@
 import time
-import matplotlib.pyplot as plt
 import pyrealsense as pyrs
 pyrs.start()
 time.sleep(2)
 
-# cm = pyrs.get_colour()
-# plt.imshow(cm)
-# plt.show()
 
+## using matplotlib for static
+import matplotlib.pyplot as plt
+cm = pyrs.get_colour()
+plt.imshow(cm)
+plt.show()
+
+
+## using opencv for streaming
 import cv2
 import numpy as np
-import time
-
-
 
 cnt = 0
 last = time.time()
@@ -30,6 +31,8 @@ while True:
         last = now
 
     c = pyrs.get_colour()
+    c = cv2.cvtColor(c, cv2.COLOR_RGB2BGR)
+
     d = pyrs.get_depth() >> 3
     d = cv2.applyColorMap(d.astype(np.uint8), cv2.COLORMAP_RAINBOW)
 
