@@ -35,7 +35,7 @@ while True:
 
     cd = np.concatenate((c,d), axis=1)
 
-    cd = cv2.putText(cd, str(fps_smooth)[:4], (0,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0))
+    cv2.putText(cd, str(fps_smooth)[:4], (0,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0))
 
     cv2.imshow('', cd)
     if cv2.waitKey(1) & 0xFF == ord('q'):
