@@ -1,46 +1,77 @@
+import numpy as np
+cimport numpy as np
+
+ctypedef enum rs_distortion:
+    RS_DISTORTION_NONE                  
+    RS_DISTORTION_MODIFIED_BROWN_CONRADY
+    RS_DISTORTION_INVERSE_BROWN_CONRADY 
+    RS_DISTORTION_FTHETA                
+    RS_DISTORTION_COUNT
+
+ctypedef struct rs_intrinsics:
+    int           width
+    int           height
+    float         ppx
+    float         ppy
+    float         fx
+    float         fy
+    rs_distortion model
+    float         coeffs[5]
 
 
 cdef extern from "librealsense/rsutil.h":
-    ctypedef struct rs_intrinsics:
-        pass
+    # ctypedef struct rs_intrinsics:
+    #     pass
 
     void rs_deproject_pixel_to_point(float point[3], rs_intrinsics * intrin, float pixel[2], float depth)
 
 
-def pointcloudfromdepth(point, intrin, pixel, depth):
-    pass
+cdef float pointcloud[480*640*3];
 
-#     memset(pointcloud, 0, sizeof(pointcloud));
+def pointcloud_from_depth(np.ndarray depth_image, width, height, scale):
+    print "from cython"
 
-#     int dx, dy;
-#     for(dy=0; dy<depth_intrin.height; ++dy)
-#     {
-#         for(dx=0; dx<depth_intrin.width; ++dx)
-#         {
-#             uint16_t depth_value = depth_image[dy * depth_intrin.width + dx];
-#             float depth_in_meters = depth_value * scale;
+    # memset(pointcloud, 0, sizeof(pointcloud));
 
-#             if(depth_value == 0) continue;
+    cdef int dx, dy
 
-#             float depth_pixel[2] = {(float)dx, (float)dy};
-#             float depth_point[3];
+    cdef int depth_value
+    cdef float depth_in_meters
+    cdef float depth_pixel[2]
+    cdef float depth_point[3]
 
-#             rs_deproject_pixel_to_point(depth_point, &depth_intrin, depth_pixel, depth_in_meters);
+    cdef rs_intrinsics _rs_intrinsics
+    # for(dy=0; dy<height; ++dy)
+    # {
+    for dy in range(height):
+    #     for(dx=0; dx<width; ++dx)
+    #     {
+        for dx in range(width):
 
-#             pointcloud[dy*depth_intrin.width*3 + dx*3 + 0] = depth_point[0];
-#             pointcloud[dy*depth_intrin.width*3 + dx*3 + 1] = depth_point[1];
-#             pointcloud[dy*depth_intrin.width*3 + dx*3 + 2] = depth_point[2];
-#         }
-#     }
+            depth_value = depth_image[dy,dx]
+            depth_in_meters = depth_value * scale
 
-#     npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
+            if(depth_value == 0): continue
 
-#     return PyArray_SimpleNewFromData(
-#         3,
-#         dims,
-#         NPY_FLOAT,
-#         (void*) &pointcloud
-#         );
-# }
+            depth_pixel[0] = <float>dx
+            depth_pixel[1] = <float>dy
+            depth_point[3]
+
+            rs_deproject_pixel_to_point(depth_point, &_rs_intrinsics, depth_pixel, depth_in_meters)
+
+            pointcloud[dy*width*3 + dx*3 + 0] = depth_point[0]
+            pointcloud[dy*width*3 + dx*3 + 1] = depth_point[1]
+            pointcloud[dy*width*3 + dx*3 + 2] = depth_point[2]
+    #     }
+    # }
+
+    return pointcloud
+    # npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
+    # return PyArray_SimpleNewFromData(
+    #     3,
+    #     dims,
+    #     NPY_FLOAT,
+    #     <void*> &pointcloud
+    #     );
 
 

@@ -17,6 +17,19 @@ from pyrealsense.constants import rs_stream
 lrs = ctypes.CDLL('librealsense.so')
 
 
+class rs_intrinsics(ctypes.Structure):
+    _fields_ = [
+        ("width", ctypes.c_int),
+        ("height", ctypes.c_int),
+        ("ppx", ctypes.c_float),
+        ("ppy", ctypes.c_float),
+        ("fx", ctypes.c_float),
+        ("fy", ctypes.c_float),
+        ("model", ctypes.c_int),        #rs_distortion
+        ("coeffs", ctypes.c_float*5),
+    ]
+
+
 ## ERROR handling
 # manual type definition
 class rs_error(ctypes.Structure):
@@ -116,6 +129,7 @@ class DepthStream(Stream):
                        fps=30):
         super(DepthStream, self).__init__(stream, width, height, format, fps)
 
+import rsutil
 
 class Device(object):
     """docstring for device"""
@@ -158,4 +172,40 @@ class Device(object):
         lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
         depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
 
-        return pointcloud_from_depth(depth)  # cython
+        print depth.__class__
+
+        ret = rsutil.pointcloud_from_depth(depth, 640, 480, 3)  # cython
+
+        return ret
+
+    def get_depth_scale(self):
+        lrs.rs_get_device_depth_scale.restype = ctypes.c_float
+        return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
+
+    def get_stream_intrinsics(self):
+
+        _rs_intrinsics = rs_intrinsics()
+
+        lrs.rs_get_stream_intrinsics(
+            self.dev,
+            rs_stream.RS_STREAM_COLOR,
+            ctypes.byref(_rs_intrinsics),
+            ctypes.byref(e))
+
+        print _rs_intrinsics.width
+        print [i for i in _rs_intrinsics.coeffs]
+
+    def get_stream_intrinsics(self):
+
+        _rs_intrinsics = rs_intrinsics()
+
+        lrs.rs_get_stream_intrinsics(
+            self.dev,
+            rs_stream.RS_STREAM_DEPTH,
+            ctypes.byref(_rs_intrinsics),
+            ctypes.byref(e))
+
+        print _rs_intrinsics.width
+        print [i for i in _rs_intrinsics.coeffs]
+
+        return _rs_intrinsics

@@ -32,7 +32,7 @@ ast = pycparser.parse_file(rs_h_filename, use_cpp=True)
 
 
 ## extract the enums from parsed header
-enums_to_map = ['rs_capabilities', 'rs_stream', 'rs_format']
+enums_to_map = ['rs_capabilities', 'rs_stream', 'rs_format', 'rs_distortion']
 
 
 def get_enumlist(obj):
