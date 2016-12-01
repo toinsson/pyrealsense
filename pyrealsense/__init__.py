@@ -209,3 +209,20 @@ class Device(object):
         print [i for i in _rs_intrinsics.coeffs]
 
         return _rs_intrinsics
+
+    def test_intrinsics(self):
+
+        _rs_intrinsics = rs_intrinsics()
+
+        lrs.rs_get_stream_intrinsics(
+            self.dev,
+            rs_stream.RS_STREAM_DEPTH,
+            ctypes.byref(_rs_intrinsics),
+            ctypes.byref(e))
+
+        print _rs_intrinsics.width
+        print [i for i in _rs_intrinsics.coeffs]
+
+        rsutil.test_intrinsics(_rs_intrinsics)
+
+        return True
