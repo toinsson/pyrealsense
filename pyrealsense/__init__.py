@@ -49,11 +49,26 @@ def start(device_id = 0):
         ctx = lrs.rs_create_context(cnst.RS_API_VERSION, ctypes.byref(e))
         _check_error()
 
+    # print("There are %d connected RealSense devices.\n", rs_get_device_count(ctx, &e));
     lrs.rs_get_device_count(ctx, ctypes.byref(e))
     _check_error()
-
     dev = lrs.rs_get_device(ctx, 0, ctypes.byref(e))
     _check_error()
+
+
+    charptr = ctypes.POINTER(ctypes.c_char)
+    lrs.rs_get_device_name.restype=charptr
+
+    ret = lrs.rs_get_device_name(dev, ctypes.byref(e))
+    print "ret = ", ctypes.cast(ret, ctypes.c_char_p).value
+    print("Using device 0, an %", ctypes.cast(ret, ctypes.c_char_p).value);
+    _check_error();
+    print("    Serial number: %s\n", lrs.rs_get_device_serial(dev, ctypes.byref(e)));
+    _check_error();
+    print("    Firmware version: %s\n", lrs.rs_get_device_firmware_version(dev, ctypes.byref(e)));
+    _check_error();
+
+
 
     #"this should crash if there is no device.."
 
