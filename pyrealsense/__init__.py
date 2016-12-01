@@ -1,48 +1,31 @@
 import sys
 
+# import rsutil.so
+
 from numpy.ctypeslib import ndpointer
 import ctypes
 
 from pyrealsense import constants as cnst
 from pyrealsense.constants import rs_stream
 
-# manual type definition
-class rs_error(ctypes.Structure):
-    _fields_ = [("message", ctypes.c_char_p),
-                ("function", ctypes.c_char_p),
-                ("args", ctypes.c_char_p),
-                ]
-
-
-# typedef struct rs_intrinsics
-# {
-#     int           width;     /* width of the image in pixels */
-#     int           height;    /* height of the image in pixels */
-#     float         ppx;       /* horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
-#     float         ppy;       /* vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
-#     float         fx;        /* focal length of the image plane, as a multiple of pixel width */
-#     float         fy;        /* focal length of the image plane, as a multiple of pixel height */
-#     rs_distortion model;     /* distortion model of the image */
-#     float         coeffs[5]; /* distortion coefficients */
-# } rs_intrinsics;
-
-# class rs_intrinsics(ctypes.Structure):
-#     _fields_ = [("rotation"), ctypes.float[9]
-#                 ]
-
-
-# typedef struct rs_extrinsics
-# {
-#     float rotation[9];    /* column-major 3x3 rotation matrix */
-#     float translation[3]; /* 3 element translation vector, in meters */
-# } rs_extrinsics;
-
+## hack to load a manually exported rsutil.h
+# import os
+# _DIRNAME = os.path.dirname(__file__)
+# rsutil = ctypes.CDLL(os.path.join(_DIRNAME,'rsutil.so'))
 
 ## import C lib
 lrs = ctypes.CDLL('librealsense.so')
 
 
 ## ERROR handling
+# manual type definition
+class rs_error(ctypes.Structure):
+    # pass
+    _fields_ = [("message", ctypes.c_char_p),
+                ("function", ctypes.POINTER(ctypes.c_char)),
+                ("args", ctypes.c_char_p),
+                ]
+
 e = ctypes.POINTER(rs_error)()
 
 def _check_error():
@@ -54,36 +37,6 @@ def _check_error():
     except ValueError:
         # no error
         pass
-
-
-class device(object):
-    """docstring for device"""
-    def __init__(self, ctx, dev):
-        super(device, self).__init__()
-        self.ctx = ctx
-        self.dev = dev
-
-
-    def stop():
-        """Stop a device  ##and delete the contexte
-        """
-        lrs.rs_stop_device(self.dev, ctypes.byref(e));
-
-
-    def get_colour():
-        """Return the color stream
-        """
-        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
-        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint8, shape=(480,640,3))
-        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_COLOR, ctypes.byref(e))
-
-
-    def get_depth():
-        """Return the depth stream
-        """
-        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
-        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
-        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
 
 
 ctx = 0
@@ -112,10 +65,82 @@ def start(device_id = 0):
 
     lrs.rs_start_device(dev, ctypes.byref(e))
 
-    return device(ctx, dev)
+    return Device(ctx, dev)
 
 def stop():
     """Delete the context
     """
     global ctx
-    lrs.rs_delete_context(self.ctx, ctypes.byref(e));
+    lrs.rs_delete_context(ctx, ctypes.byref(e));
+
+
+
+class Stream(object):
+    """docstring for Stream"""
+    def __init__(self, stream, width, height, format, fps):
+        super(Stream, self).__init__()
+        self.stream = stream
+        self.width = width
+        self.height = height
+        self.format = format
+        self.fps = fps
+
+class ColourStream(Stream):
+    def __init__(self, stream=cnst.rs_stream.RS_STREAM_COLOR,
+                       width=640,
+                       height=480,
+                       format=cnst.rs_format.RS_FORMAT_RGB8,
+                       fps=30):
+        super(ColourStream, self).__init__(stream, width, height, format, fps)
+
+class DepthStream(Stream):
+    def __init__(self, stream=cnst.rs_stream.RS_STREAM_DEPTH,
+                       width=640,
+                       height=480,
+                       format=cnst.rs_format.RS_FORMAT_Z16,
+                       fps=30):
+        super(DepthStream, self).__init__(stream, width, height, format, fps)
+
+
+class Device(object):
+    """docstring for device"""
+    def __init__(self, ctx, dev, streams = []):
+        super(Device, self).__init__()
+        self.ctx = ctx
+        self.dev = dev
+
+        if streams == []:
+            self.streams = [ColourStream(), DepthStream()]
+        else:
+            self.streams = streams
+
+    def stop(self):
+        """Stop a device  ##and delete the contexte
+        """
+        lrs.rs_stop_device(self.dev, ctypes.byref(e));
+
+
+    def get_colour(self):
+        """Return the color stream
+        """
+        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint8, shape=(480,640,3))
+        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_COLOR, ctypes.byref(e))
+
+
+    def get_depth(self):
+        """Return the depth stream
+        """
+        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
+        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
+
+
+    def get_pointcloud(self):
+        """Return the depth stream
+        """
+        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
+        depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
+
+        return pointcloud_from_depth(depth)  # cython

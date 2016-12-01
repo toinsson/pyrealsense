@@ -1,9 +1,12 @@
-from setuptools import setup
+from setuptools import setup, Extension
 from setuptools import find_packages
+
+from Cython.Build import cythonize
 
 import pycparser
 import numpy as np
 
+import io
 
 ## do platform dependent
 rs_h_filename = "/usr/local/include/librealsense/rs.h"
@@ -11,7 +14,7 @@ rs_h_filename = "/usr/local/include/librealsense/rs.h"
 
 ## extract RS_API in #define
 rs_api = []
-with open(rs_h_filename, encoding='latin') as rs_h_file:
+with io.open(rs_h_filename, encoding='latin') as rs_h_file:
     for l in rs_h_file.readlines():
         if "RS_API" in l:
             rs_api.append(" = ".join(l.split()[1:]))
@@ -57,13 +60,27 @@ with open("./pyrealsense/constants.py", "a") as constants:
             e = get_enumlist(c)
             write_enumlist(constants, e, c.name)
 
+# ## compile rsutil.h
+# module = [
+#     Extension( 'pyrealsense.rsutil',
+#                sources = ['pyrealsense/rsutil.c'],
+#                libraries = ['realsense'],
+#                include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
+#                library_dirs = ['/usr/local/lib'],
+#             )
+#     ]
 
-## find name of enum we are interested in
-# 'rs_capabilities', 'rs_stream', rs_format'
-# ast.ext[0].show(attrnames=True, nodenames=True, showcoord=True)
-# dump to file and install locally
-# use NodeVisitor for that matter and copy Node.show structure
+module = [
+    Extension( 'pyrealsense.rsutil',
+               sources = ['pyrealsense/rsutil.pyx'],
+               libraries = ['realsense'],
+               include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
+               library_dirs = ['/usr/local/lib'],
+            )
+    ]
 
 setup ( name = 'pyrealsense',
         version = '1.0',
-        packages=find_packages())
+        ext_modules = cythonize(module),
+        packages = find_packages(),
+        )
