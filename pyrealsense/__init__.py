@@ -1,14 +1,12 @@
 import sys
 
-# import rsutil.so
-
 from numpy.ctypeslib import ndpointer
 import ctypes
 
 from pyrealsense import constants as cnst
-from pyrealsense.constants import rs_stream
+from pyrealsense.constants import rs_stream, rs_format
 
-## hack to load a manually exported rsutil.h
+# hack to load a manually exported rsutil.h
 # import os
 # _DIRNAME = os.path.dirname(__file__)
 # rsutil = ctypes.CDLL(os.path.join(_DIRNAME,'rsutil.so'))
@@ -31,21 +29,47 @@ class rs_intrinsics(ctypes.Structure):
 
 
 ## ERROR handling
-# manual type definition
 class rs_error(ctypes.Structure):
-    # pass
     _fields_ = [("message", ctypes.c_char_p),
                 ("function", ctypes.POINTER(ctypes.c_char)),
                 ("args", ctypes.c_char_p),
                 ]
+
+def CharpValueCast(char_p):
+    return ctypes.cast(char_p, ctypes.c_char_p).value
+
+def __pp(fun, *args):
+    fun.restype = ctypes.POINTER(ctypes.c_char)
+    print args
+    ret = fun(*args)
+    return ctypes.cast(ret, ctypes.c_char_p).value
+
 
 e = ctypes.POINTER(rs_error)()
 
 def _check_error():
     global e
     try:
-        # TODO: currently problem with function argument of error, which SEGFAULT when accessed
-        print("rs_error was raised with message: " + e.contents.message)
+        e.contents
+
+        print 1
+        print __pp(lrs.rs_get_failed_function, e)
+        print 2
+
+        charptr = ctypes.POINTER(ctypes.c_char)
+        lrs.rs_get_failed_function.restype = charptr
+        lrs.rs_get_failed_args.restype = charptr
+        lrs.rs_get_error_message.restype = charptr
+        failedfunction = lrs.rs_get_failed_function(e)
+        failedargs = lrs.rs_get_failed_args(e)
+        errormessage = lrs.rs_get_error_message(e)
+
+        print("rs_error was raised when calling {}({})".format(
+            CharpValueCast(failedfunction),
+            CharpValueCast(failedargs))
+            )
+        print("    {}", CharpValueCast(errormessage))
+
         sys.exit(0)
     except ValueError:
         # no error
@@ -62,7 +86,9 @@ def start(device_id = 0):
         ctx = lrs.rs_create_context(cnst.RS_API_VERSION, ctypes.byref(e))
         _check_error()
 
-    # print("There are %d connected RealSense devices.\n", rs_get_device_count(ctx, &e));
+    print("There are {} connected RealSense devices.".format(
+    lrs.rs_get_device_count(ctx, ctypes.byref(e))))
+
     lrs.rs_get_device_count(ctx, ctypes.byref(e))
     _check_error()
     dev = lrs.rs_get_device(ctx, 0, ctypes.byref(e))
@@ -70,11 +96,17 @@ def start(device_id = 0):
 
 
     charptr = ctypes.POINTER(ctypes.c_char)
-    lrs.rs_get_device_name.restype=charptr
+    lrs.rs_get_device_name.restype = charptr
+    lrs.rs_get_device_serial.restype = charptr
+    lrs.rs_get_device_firmware_version.restype = charptr
 
     ret = lrs.rs_get_device_name(dev, ctypes.byref(e))
-    print "ret = ", ctypes.cast(ret, ctypes.c_char_p).value
-    print("Using device 0, an %", ctypes.cast(ret, ctypes.c_char_p).value);
+    # print "ret = ", ctypes.cast(ret, ctypes.c_char_p).value
+
+
+    print("Using device 0, an {}", __pp(lrs.rs_get_device_name, dev, ctypes.byref(e)));
+
+    print("Using device 0, an {}", ctypes.cast(ret, ctypes.c_char_p).value);
     _check_error();
     print("    Serial number: %s\n", lrs.rs_get_device_serial(dev, ctypes.byref(e)));
     _check_error();
@@ -114,22 +146,22 @@ class Stream(object):
         self.fps = fps
 
 class ColourStream(Stream):
-    def __init__(self, stream=cnst.rs_stream.RS_STREAM_COLOR,
+    def __init__(self, stream=rs_stream.RS_STREAM_COLOR,
                        width=640,
                        height=480,
-                       format=cnst.rs_format.RS_FORMAT_RGB8,
+                       format=rs_format.RS_FORMAT_RGB8,
                        fps=30):
         super(ColourStream, self).__init__(stream, width, height, format, fps)
 
 class DepthStream(Stream):
-    def __init__(self, stream=cnst.rs_stream.RS_STREAM_DEPTH,
+    def __init__(self, stream=rs_stream.RS_STREAM_DEPTH,
                        width=640,
                        height=480,
-                       format=cnst.rs_format.RS_FORMAT_Z16,
+                       format=rs_format.RS_FORMAT_Z16,
                        fps=30):
         super(DepthStream, self).__init__(stream, width, height, format, fps)
 
-import rsutil
+# import rsutil
 
 class Device(object):
     """docstring for device"""

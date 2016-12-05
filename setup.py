@@ -70,17 +70,17 @@ with open("./pyrealsense/constants.py", "a") as constants:
 #             )
 #     ]
 
-module = [
-    Extension( 'pyrealsense.rsutil',
-               sources = ['pyrealsense/rsutil.pyx'],
-               libraries = ['realsense'],
-               include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
-               library_dirs = ['/usr/local/lib'],
-            )
-    ]
+# module = [
+#     Extension( 'pyrealsense.rsutil',
+#                sources = ['pyrealsense/rsutil.pyx'],
+#                libraries = ['realsense'],
+#                include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
+#                library_dirs = ['/usr/local/lib'],
+#             )
+#     ]
 
 setup ( name = 'pyrealsense',
         version = '1.0',
-        ext_modules = cythonize(module),
+        # ext_modules = cythonize(module),
         packages = find_packages(),
         )
