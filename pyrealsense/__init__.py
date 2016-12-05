@@ -6,10 +6,10 @@ import ctypes
 from pyrealsense import constants as cnst
 from pyrealsense.constants import rs_stream, rs_format
 
-# hack to load a manually exported rsutil.h
-# import os
-# _DIRNAME = os.path.dirname(__file__)
-# rsutil = ctypes.CDLL(os.path.join(_DIRNAME,'rsutil.so'))
+# hack to load "extension"
+import os
+_DIRNAME = os.path.dirname(__file__)
+rsutil = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
 
 ## import C lib
 lrs = ctypes.CDLL('librealsense.so')
@@ -40,10 +40,8 @@ def CharpValueCast(char_p):
 
 def __pp(fun, *args):
     fun.restype = ctypes.POINTER(ctypes.c_char)
-    print args
     ret = fun(*args)
     return ctypes.cast(ret, ctypes.c_char_p).value
-
 
 e = ctypes.POINTER(rs_error)()
 
@@ -52,25 +50,13 @@ def _check_error():
     try:
         e.contents
 
-        print 1
-        print __pp(lrs.rs_get_failed_function, e)
-        print 2
-
-        charptr = ctypes.POINTER(ctypes.c_char)
-        lrs.rs_get_failed_function.restype = charptr
-        lrs.rs_get_failed_args.restype = charptr
-        lrs.rs_get_error_message.restype = charptr
-        failedfunction = lrs.rs_get_failed_function(e)
-        failedargs = lrs.rs_get_failed_args(e)
-        errormessage = lrs.rs_get_error_message(e)
-
         print("rs_error was raised when calling {}({})".format(
-            CharpValueCast(failedfunction),
-            CharpValueCast(failedargs))
-            )
-        print("    {}", CharpValueCast(errormessage))
-
+            __pp(lrs.rs_get_failed_function, e),
+            __pp(lrs.rs_get_failed_args, e),
+            ))
+        print("    {}".format(__pp(lrs.rs_get_error_message, e)))
         sys.exit(0)
+
     except ValueError:
         # no error
         pass
@@ -88,36 +74,18 @@ def start(device_id = 0):
 
     print("There are {} connected RealSense devices.".format(
     lrs.rs_get_device_count(ctx, ctypes.byref(e))))
-
-    lrs.rs_get_device_count(ctx, ctypes.byref(e))
     _check_error()
     dev = lrs.rs_get_device(ctx, 0, ctypes.byref(e))
     _check_error()
 
-
-    charptr = ctypes.POINTER(ctypes.c_char)
-    lrs.rs_get_device_name.restype = charptr
-    lrs.rs_get_device_serial.restype = charptr
-    lrs.rs_get_device_firmware_version.restype = charptr
-
-    ret = lrs.rs_get_device_name(dev, ctypes.byref(e))
-    # print "ret = ", ctypes.cast(ret, ctypes.c_char_p).value
-
-
-    print("Using device 0, an {}", __pp(lrs.rs_get_device_name, dev, ctypes.byref(e)));
-
-    print("Using device 0, an {}", ctypes.cast(ret, ctypes.c_char_p).value);
+    print("Using device 0, an {}".format(__pp(lrs.rs_get_device_name, dev, ctypes.byref(e))))
     _check_error();
-    print("    Serial number: %s\n", lrs.rs_get_device_serial(dev, ctypes.byref(e)));
+    print("    Serial number: {}".format(__pp(lrs.rs_get_device_serial, dev, ctypes.byref(e))))
     _check_error();
-    print("    Firmware version: %s\n", lrs.rs_get_device_firmware_version(dev, ctypes.byref(e)));
+    print("    Firmware version: {}".format(
+            __pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))))
     _check_error();
 
-
-
-    #"this should crash if there is no device.."
-
-    #rs_enable_stream(dev, RS_STREAM_COLOR, c_width, c_height, RS_FORMAT_RGB8, c_fps, &e);
     lrs.rs_enable_stream(dev, rs_stream.RS_STREAM_DEPTH, 640, 480, 1, 30, ctypes.byref(e));
     _check_error();
     lrs.rs_enable_stream(dev, rs_stream.RS_STREAM_COLOR, 640, 480, 5, 30, ctypes.byref(e));
@@ -161,7 +129,6 @@ class DepthStream(Stream):
                        fps=30):
         super(DepthStream, self).__init__(stream, width, height, format, fps)
 
-# import rsutil
 
 class Device(object):
     """docstring for device"""
@@ -220,19 +187,6 @@ class Device(object):
 
         lrs.rs_get_stream_intrinsics(
             self.dev,
-            rs_stream.RS_STREAM_COLOR,
-            ctypes.byref(_rs_intrinsics),
-            ctypes.byref(e))
-
-        print _rs_intrinsics.width
-        print [i for i in _rs_intrinsics.coeffs]
-
-    def get_stream_intrinsics(self):
-
-        _rs_intrinsics = rs_intrinsics()
-
-        lrs.rs_get_stream_intrinsics(
-            self.dev,
             rs_stream.RS_STREAM_DEPTH,
             ctypes.byref(_rs_intrinsics),
             ctypes.byref(e))
@@ -241,20 +195,3 @@ class Device(object):
         print [i for i in _rs_intrinsics.coeffs]
 
         return _rs_intrinsics
-
-    def test_intrinsics(self):
-
-        _rs_intrinsics = rs_intrinsics()
-
-        lrs.rs_get_stream_intrinsics(
-            self.dev,
-            rs_stream.RS_STREAM_DEPTH,
-            ctypes.byref(_rs_intrinsics),
-            ctypes.byref(e))
-
-        print _rs_intrinsics.width
-        print [i for i in _rs_intrinsics.coeffs]
-
-        rsutil.test_intrinsics(_rs_intrinsics)
-
-        return True

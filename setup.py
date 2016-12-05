@@ -61,14 +61,14 @@ with open("./pyrealsense/constants.py", "a") as constants:
             write_enumlist(constants, e, c.name)
 
 # ## compile rsutil.h
-# module = [
-#     Extension( 'pyrealsense.rsutil',
-#                sources = ['pyrealsense/rsutil.c'],
-#                libraries = ['realsense'],
-#                include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
-#                library_dirs = ['/usr/local/lib'],
-#             )
-#     ]
+module = [
+    Extension( 'pyrealsense.rsutilwrapper',
+               sources = ['pyrealsense/rsutilwrapper.c'],
+               libraries = ['realsense'],
+               include_dirs = [np.get_include(),'/usr/local/include/librealsense'],
+               library_dirs = ['/usr/local/lib'],
+            )
+    ]
 
 # module = [
 #     Extension( 'pyrealsense.rsutil',
@@ -81,6 +81,6 @@ with open("./pyrealsense/constants.py", "a") as constants:
 
 setup ( name = 'pyrealsense',
         version = '1.0',
-        # ext_modules = cythonize(module),
+        ext_modules = module,
         packages = find_packages(),
         )
