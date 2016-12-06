@@ -35,10 +35,8 @@ class rs_error(ctypes.Structure):
                 ("args", ctypes.c_char_p),
                 ]
 
-def CharpValueCast(char_p):
-    return ctypes.cast(char_p, ctypes.c_char_p).value
-
 def __pp(fun, *args):
+    """Wrapper for printing char pointer from ctypes."""
     fun.restype = ctypes.POINTER(ctypes.c_char)
     ret = fun(*args)
     return ctypes.cast(ret, ctypes.c_char_p).value
@@ -142,6 +140,11 @@ class Device(object):
         else:
             self.streams = streams
 
+        self.depth_intrinsics = self.get_stream_intrinsics()
+        self.depth_scale = self.get_depth_scale()
+
+
+
     def stop(self):
         """Stop a device  ##and delete the contexte
         """
@@ -171,9 +174,30 @@ class Device(object):
         lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
         depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
 
-        print depth.__class__
 
-        ret = rsutil.pointcloud_from_depth(depth, 640, 480, 3)  # cython
+        # depth_intrinsics = self.get_stream_intrinsics()
+        # depth_scale = self.get_depth_scale()
+
+        # import ipdb; ipdb.set_trace()
+
+        # print depth.__class__
+        # print depth.shape
+        # print depth.dtype
+        # print depth.ctypes
+        # print depth_intrinsics.__class__
+        # print depth_scale.__class__
+
+        # # for i in range(10):
+        # print [depth.reshape(-1)[i] for i in range(10)]
+        # # for i in range(200,240):
+        # print [depth.reshape(-1)[i] for i in range(200,240)]
+
+        rsutil.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
+
+        ret = rsutil.get_pointcloud(
+            ctypes.c_void_p(depth.ctypes.data),
+            ctypes.byref(self.depth_intrinsics),
+            ctypes.byref(ctypes.c_float(self.depth_scale)))
 
         return ret
 
@@ -191,7 +215,7 @@ class Device(object):
             ctypes.byref(_rs_intrinsics),
             ctypes.byref(e))
 
-        print _rs_intrinsics.width
-        print [i for i in _rs_intrinsics.coeffs]
+        # print _rs_intrinsics.width
+        # print [i for i in _rs_intrinsics.coeffs]
 
         return _rs_intrinsics
