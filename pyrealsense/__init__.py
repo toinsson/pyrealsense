@@ -1,5 +1,7 @@
 import sys
 
+import logging
+
 from numpy.ctypeslib import ndpointer
 import ctypes
 
@@ -59,7 +61,6 @@ def _check_error():
         # no error
         pass
 
-
 ctx = 0
 def start():
     """Start the service. Can only be one running.
@@ -76,27 +77,6 @@ def start():
     lrs.rs_get_device_count(ctx, ctypes.byref(e))))
     _check_error()
 
-    dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
-    _check_error()
-
-    print("Using device {}, an {}".format(
-        device_id, 
-        __pp(lrs.rs_get_device_name, dev, ctypes.byref(e))))
-    _check_error();
-    print("    Serial number: {}".format(__pp(lrs.rs_get_device_serial, dev, ctypes.byref(e))))
-    _check_error();
-    print("    Firmware version: {}".format(
-            __pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))))
-    _check_error();
-
-    lrs.rs_enable_stream(dev, rs_stream.RS_STREAM_DEPTH, 640, 480, 1, 30, ctypes.byref(e));
-    _check_error();
-    lrs.rs_enable_stream(dev, rs_stream.RS_STREAM_COLOR, 640, 480, 5, 30, ctypes.byref(e));
-    _check_error();
-
-    lrs.rs_start_device(dev, ctypes.byref(e))
-
-    return Device(dev)
 
 def stop():
     """Stop the service
@@ -109,8 +89,9 @@ def stop():
 
 class Stream(object):
     """docstring for Stream"""
-    def __init__(self, stream, width, height, format, fps):
+    def __init__(self, name, stream, width, height, format, fps):
         super(Stream, self).__init__()
+        self.name = name
         self.stream = stream
         self.width = width
         self.height = height
@@ -118,36 +99,68 @@ class Stream(object):
         self.fps = fps
 
 class ColourStream(Stream):
-    def __init__(self, stream=rs_stream.RS_STREAM_COLOR,
+    def __init__(self, name='colour',
+                       stream=rs_stream.RS_STREAM_COLOR,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_RGB8,
                        fps=30):
-        super(ColourStream, self).__init__(stream, width, height, format, fps)
+        super(ColourStream, self).__init__(name, stream, width, height, format, fps)
 
 class DepthStream(Stream):
-    def __init__(self, stream=rs_stream.RS_STREAM_DEPTH,
+    def __init__(self, name='depth',
+                       stream=rs_stream.RS_STREAM_DEPTH,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_Z16,
                        fps=30):
-        super(DepthStream, self).__init__(stream, width, height, format, fps)
+        super(DepthStream, self).__init__(name, stream, width, height, format, fps)
+
+
+def pretty_print(fun, *args):
+    """Wrapper for printing char pointer from ctypes."""
+    fun.restype = ctypes.POINTER(ctypes.c_char)
+    ret = fun(*args)
+    return ctypes.cast(ret, ctypes.c_char_p).value
 
 
 class Device(object):
     """Camera device."""
-    def __init__(self, dev, device_id = 0, streams = []):
+    def __init__(self, device_id = 0, streams = [ColourStream(), DepthStream()]):
         super(Device, self).__init__()
 
         global ctx
-        self.dev = dev
 
-        if streams == []:
-            self.streams = [ColourStream(), DepthStream()]
-        else:
-            self.streams = streams
+        self.dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
+        _check_error()
 
-        self._depth_intrinsics = self._get_stream_intrinsics(rs_stream.RS_STREAM_DEPTH)
+        print("Using device {}, an {}".format(
+            device_id, 
+            pretty_print(lrs.rs_get_device_name, self.dev, ctypes.byref(e))))
+        _check_error();
+        print("    Serial number: {}".format(
+            pretty_print(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))))
+        _check_error();
+        print("    Firmware version: {}".format(
+            pretty_print(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
+        _check_error();
+
+        self.streams = streams
+        for s in self.streams:
+            lrs.rs_enable_stream(self.dev,
+                s.stream, s.width, s.height, s.format, s.fps,
+                ctypes.byref(e));
+            _check_error();
+
+        lrs.rs_start_device(self.dev, ctypes.byref(e))
+
+        for s in self.streams:
+            print s.name
+            _i = self._get_stream_intrinsics(s.format)
+            setattr(self, s.name + '_intrinsics', _i)
+
+            # if s.stream == 'depth'
+
         self._depth_scale = self._get_depth_scale()
 
     def stop(self):
@@ -186,20 +199,14 @@ class Device(object):
         depth[0,:2] = 0
 
         rsutil.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
-        ret = rsutil.get_pointcloud(
+        return rsutil.get_pointcloud(
             ctypes.c_void_p(depth.ctypes.data),
             ctypes.byref(self.depth_intrinsics),
             ctypes.byref(ctypes.c_float(self.depth_scale)))
 
-        return ret
-
     @property
     def depth_scale(self):
         return self._depth_scale
-
-    @property
-    def depth_intrinsics(self):
-        return self._depth_intrinsics
 
     def _get_depth_scale(self):
         lrs.rs_get_device_depth_scale.restype = ctypes.c_float
