@@ -11,7 +11,7 @@ from pyrealsense.constants import rs_stream, rs_format
 # hack to load "extension" module
 import os
 _DIRNAME = os.path.dirname(__file__)
-rsutil = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
+rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
 
 ## import C lib
 lrs = ctypes.CDLL('librealsense.so')
@@ -37,7 +37,7 @@ class rs_error(ctypes.Structure):
                 ("args", ctypes.c_char_p),
                 ]
 
-def __pp(fun, *args):
+def pp(fun, *args):
     """Wrapper for printing char pointer from ctypes."""
     fun.restype = ctypes.POINTER(ctypes.c_char)
     ret = fun(*args)
@@ -51,10 +51,10 @@ def _check_error():
         e.contents
 
         print("rs_error was raised when calling {}({})".format(
-            __pp(lrs.rs_get_failed_function, e),
-            __pp(lrs.rs_get_failed_args, e),
+            pp(lrs.rs_get_failed_function, e),
+            pp(lrs.rs_get_failed_args, e),
             ))
-        print("    {}".format(__pp(lrs.rs_get_error_message, e)))
+        print("    {}".format(pp(lrs.rs_get_error_message, e)))
         sys.exit(0)
 
     except ValueError:
@@ -106,6 +106,8 @@ class ColourStream(Stream):
                        format=rs_format.RS_FORMAT_RGB8,
                        fps=30):
         super(ColourStream, self).__init__(name, stream, width, height, format, fps)
+        self.shape = (height, width, 3)
+        self.dtype = ctypes.c_uint8
 
 class DepthStream(Stream):
     def __init__(self, name='depth',
@@ -115,18 +117,20 @@ class DepthStream(Stream):
                        format=rs_format.RS_FORMAT_Z16,
                        fps=30):
         super(DepthStream, self).__init__(name, stream, width, height, format, fps)
+        self.shape = (height, width)
+        self.dtype = ctypes.c_uint16
 
 
-def pretty_print(fun, *args):
-    """Wrapper for printing char pointer from ctypes."""
-    fun.restype = ctypes.POINTER(ctypes.c_char)
-    ret = fun(*args)
-    return ctypes.cast(ret, ctypes.c_char_p).value
-
+def test_fun(self):
+    print 'test is fun'
 
 class Device(object):
     """Camera device."""
-    def __init__(self, device_id = 0, streams = [ColourStream(), DepthStream()]):
+    def __init__(self,
+            device_id = 0,
+            streams = [ColourStream(), DepthStream()],
+            depth_control_preset = None,
+            ivcam_preset = None):
         super(Device, self).__init__()
 
         global ctx
@@ -136,14 +140,21 @@ class Device(object):
 
         print("Using device {}, an {}".format(
             device_id, 
-            pretty_print(lrs.rs_get_device_name, self.dev, ctypes.byref(e))))
+            pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))))
         _check_error();
         print("    Serial number: {}".format(
-            pretty_print(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))))
+            pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))))
         _check_error();
         print("    Firmware version: {}".format(
-            pretty_print(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
+            pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
         _check_error();
+
+        ## depth control preset
+        if depth_control_preset:
+            rsutilwrapper._apply_depth_control_preset(self.dev, depth_control_preset)
+        ## ivcam preset
+        if ivcam_preset:
+            rsutilwrapper._apply_ivcam_preset(self.dev, ivcam_preset)
 
         self.streams = streams
         for s in self.streams:
@@ -154,14 +165,27 @@ class Device(object):
 
         lrs.rs_start_device(self.dev, ctypes.byref(e))
 
+        ## add stream property and intrinsics
         for s in self.streams:
-            print s.name
-            _i = self._get_stream_intrinsics(s.format)
-            setattr(self, s.name + '_intrinsics', _i)
-
-            # if s.stream == 'depth'
+            setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
+            setattr(Device, s.name, property(self._get_stream_clojure(s)))
 
         self._depth_scale = self._get_depth_scale()
+
+    def _get_stream_intrinsics(self, stream):
+        _rs_intrinsics = rs_intrinsics()
+        lrs.rs_get_stream_intrinsics(
+            self.dev,
+            stream,
+            ctypes.byref(_rs_intrinsics),
+            ctypes.byref(e))
+        return _rs_intrinsics
+
+    def _get_stream_clojure(self, s):
+        def get_stream_data(s):
+            lrs.rs_get_frame_data.restype = ndpointer(dtype=s.dtype, shape=s.shape)
+            return lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
+        return lambda x: get_stream_data(s)
 
     def stop(self):
         """Stop a device  ##and delete the contexte
@@ -174,20 +198,6 @@ class Device(object):
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
 
     @property
-    def colour(self):
-        """Return the color stream
-        """
-        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint8, shape=(480,640,3))
-        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_COLOR, ctypes.byref(e))
-
-    @property
-    def depth(self):
-        """Return the depth stream
-        """
-        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
-        return lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
-
-    @property
     def pointcloud(self):
         """Return the depth stream
         """
@@ -198,8 +208,8 @@ class Device(object):
         print depth[0,:2]
         depth[0,:2] = 0
 
-        rsutil.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
-        return rsutil.get_pointcloud(
+        rsutilwrapper.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
+        return rsutilwrapper.get_pointcloud(
             ctypes.c_void_p(depth.ctypes.data),
             ctypes.byref(self.depth_intrinsics),
             ctypes.byref(ctypes.c_float(self.depth_scale)))
@@ -212,13 +222,4 @@ class Device(object):
         lrs.rs_get_device_depth_scale.restype = ctypes.c_float
         return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
 
-    def _get_stream_intrinsics(self, stream):
-        _rs_intrinsics = rs_intrinsics()
 
-        lrs.rs_get_stream_intrinsics(
-            self.dev,
-            stream,
-            ctypes.byref(_rs_intrinsics),
-            ctypes.byref(e))
-
-        return _rs_intrinsics
