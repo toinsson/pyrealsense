@@ -1,44 +1,48 @@
 import pyrealsense as pyrs
 import matplotlib.pyplot as plt
-dev = pyrs.start()
-dm = dev.get_depth()
-plt.imshow(dm); plt.show()
 
-print dev.get_depth_scale()
-pc = dev.get_pointcloud()
+pyrs.start()
+dev = pyrs.Device()  #ivcam_preset = pyrs.cnst.rs_ivcam_preset.RS_IVCAM_PRESET_GESTURE_RECOGNITION
 
-cm = dev.get_colour()
-plt.imshow(cm); plt.show()
+import time
+import matplotlib.pyplot as plt
+import pyrealsense as pyrs
+pyrs.start()
+time.sleep(2)
 
-# import ipdb; ipdb.set_trace()
+dev.wait_for_frame()
+cm = dev.colour
+plt.imshow(cm)
+plt.show()
 
+import cv2
+import numpy as np
 
-from sys import path as  sys_path
-sys_path.insert(1,'/home/antoine/Documents/owndev/fistwriter')
-from utils import vtk_plot
-vtk_plot.plot_objects(pc, axis=True)
+cnt = 0
+last = time.time()
+smoothing = 0.9;
+fps_smooth = 30
 
-print '1'
+while True:
 
-pyrs.stop()
+    cnt += 1
+    if (cnt % 10) == 0:
+        now = time.time()
+        dt = now - last
+        fps = 10/dt
+        fps_smooth = (fps_smooth * smoothing) + (fps * (1.0-smoothing))
+        last = now
 
-print '2'
+    dev.wait_for_frame()
+    c = dev.colour
+    c = cv2.cvtColor(c, cv2.COLOR_RGB2BGR)
+    d = dev.depth >> 3
+    d = cv2.applyColorMap(d.astype(np.uint8), cv2.COLORMAP_RAINBOW)
 
-# d = np.array(range(3), dtype=np.float32)
-# rsutil.print_array(d.ctypes, d.ctypes)
+    cd = np.concatenate((c,d), axis=1)
 
+    cv2.putText(cd, str(fps_smooth)[:4], (0,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0))
 
-
-
-# import cv2
-# # import pyrealsense as pyds
-# # pyds.start()
-# # time.sleep(2)
-
-# while True:
-#     frame = dev.get_colour()
-
-#     cv2.imshow('', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-
+    cv2.imshow('', cd)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break

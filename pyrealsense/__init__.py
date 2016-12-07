@@ -66,9 +66,6 @@ def start():
     """Start the service. Can only be one running.
     """
     global ctx
-
-    device_id = 0
-
     if not ctx:
         ctx = lrs.rs_create_context(cnst.RS_API_VERSION, ctypes.byref(e))
         _check_error()
@@ -89,9 +86,10 @@ def stop():
 
 class Stream(object):
     """docstring for Stream"""
-    def __init__(self, name, stream, width, height, format, fps):
+    def __init__(self, name, native, stream, width, height, format, fps):
         super(Stream, self).__init__()
         self.name = name
+        self.native = native
         self.stream = stream
         self.width = width
         self.height = height
@@ -100,35 +98,46 @@ class Stream(object):
 
 class ColourStream(Stream):
     def __init__(self, name='colour',
+                       native=True,
                        stream=rs_stream.RS_STREAM_COLOR,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_RGB8,
                        fps=30):
-        super(ColourStream, self).__init__(name, stream, width, height, format, fps)
+        super(ColourStream, self).__init__(name, native, stream, width, height, format, fps)
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
 
 class DepthStream(Stream):
     def __init__(self, name='depth',
+                       native=True,
                        stream=rs_stream.RS_STREAM_DEPTH,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_Z16,
                        fps=30):
-        super(DepthStream, self).__init__(name, stream, width, height, format, fps)
+        super(DepthStream, self).__init__(name, native, stream, width, height, format, fps)
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
 
+class PointStream(Stream):
+    def __init__(self, name='points',
+                       native=False,
+                       stream=rs_stream.RS_STREAM_POINTS,
+                       width=640,
+                       height=480,
+                       format=rs_format.RS_FORMAT_XYZ32F,
+                       fps=30):
+        super(PointStream, self).__init__(name, native, stream, width, height, format, fps)
+        self.shape = (height, width, 3)
+        self.dtype = ctypes.c_float
 
-def test_fun(self):
-    print 'test is fun'
 
 class Device(object):
     """Camera device."""
     def __init__(self,
             device_id = 0,
-            streams = [ColourStream(), DepthStream()],
+            streams = [ColourStream(), DepthStream(), PointStream()],
             depth_control_preset = None,
             ivcam_preset = None):
         super(Device, self).__init__()
@@ -158,16 +167,18 @@ class Device(object):
 
         self.streams = streams
         for s in self.streams:
-            lrs.rs_enable_stream(self.dev,
-                s.stream, s.width, s.height, s.format, s.fps,
-                ctypes.byref(e));
-            _check_error();
+            if s.native:
+                lrs.rs_enable_stream(self.dev,
+                    s.stream, s.width, s.height, s.format, s.fps,
+                    ctypes.byref(e));
+                _check_error();
 
         lrs.rs_start_device(self.dev, ctypes.byref(e))
 
         ## add stream property and intrinsics
         for s in self.streams:
-            setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
+            if s.native:
+                setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
             setattr(Device, s.name, property(self._get_stream_clojure(s)))
 
         self._depth_scale = self._get_depth_scale()
@@ -187,6 +198,10 @@ class Device(object):
             return lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
         return lambda x: get_stream_data(s)
 
+    def _get_depth_scale(self):
+        lrs.rs_get_device_depth_scale.restype = ctypes.c_float
+        return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
+
     def stop(self):
         """Stop a device  ##and delete the contexte
         """
@@ -198,28 +213,5 @@ class Device(object):
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
 
     @property
-    def pointcloud(self):
-        """Return the depth stream
-        """
-        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
-        depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
-
-        ## ugly fix for outliers
-        print depth[0,:2]
-        depth[0,:2] = 0
-
-        rsutilwrapper.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
-        return rsutilwrapper.get_pointcloud(
-            ctypes.c_void_p(depth.ctypes.data),
-            ctypes.byref(self.depth_intrinsics),
-            ctypes.byref(ctypes.c_float(self.depth_scale)))
-
-    @property
     def depth_scale(self):
         return self._depth_scale
-
-    def _get_depth_scale(self):
-        lrs.rs_get_device_depth_scale.restype = ctypes.c_float
-        return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
-
-
