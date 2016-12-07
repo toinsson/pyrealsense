@@ -1,9 +1,5 @@
 # pyrealsense
-Simple python C extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library. 
-
-It allows to set configuration parameters on startup via `ivcam_preset`. 
-
-It returns colour images, depth images, pointcloud and uvmap as numpy arrays.
+Simple ctypes extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library. 
 
 ## installation
 
@@ -12,13 +8,15 @@ It returns colour images, depth images, pointcloud and uvmap as numpy arrays.
 ## usage
 
     import pyrealsense as pyrs
-    pyrs.start()  # keyword arguments supported
-    
-    cm = pyrs.get_colour()
+    from pyrs import
+    pyrs.start()  # setup the context
+
+    cam = pyrs.Device(device_id = 0, streams=[pyrs.ColourStream(fps=60))
+
+    cam.wait_for_frames()
+    print(cam.colour)
 
 ## caveats
-The memory returned from any function is statically allocated, which means that each call overwrite the previous value. Copy the buffer in user space if needed.
-
 To this point, this wrapper has only been tested with:
 - Python 2.x
 - Linux architecture
