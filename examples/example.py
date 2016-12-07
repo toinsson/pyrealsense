@@ -36,7 +36,7 @@ while True:
     dev.wait_for_frame()
     c = dev.colour
     c = cv2.cvtColor(c, cv2.COLOR_RGB2BGR)
-    d = dev.depth >> 3
+    d = dev.depth * dev.depth_scale * 1000
     d = cv2.applyColorMap(d.astype(np.uint8), cv2.COLORMAP_RAINBOW)
 
     cd = np.concatenate((c,d), axis=1)
