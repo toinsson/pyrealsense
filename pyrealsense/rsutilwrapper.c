@@ -6,39 +6,14 @@
 #include <string.h>
 #include <stdint.h>
 
-void print_array(float point_[3], float* point__)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        printf("%f ", point_[i]);
-        printf("%f ", point__[i]);
-    }
-}
 
-// local memory space for pointcloud - allocate max possible
+// local memory space for pointcloud - max size
 float pointcloud[480*640*3];
 
 const void * get_pointcloud(const void * depth_image,
                             const rs_intrinsics * depth_intrin,
                             const float * depth_scale)
 {
-
-    // uint16_t* depth_data = (uint16_t*)depth_image;
-
-    // printf("%f \n", *depth_scale);
-
-    // printf("depth_intrin %d %d \n", depth_intrin->height, depth_intrin->width);
-
-    // printf("depth_image\n");
-    // for (int i=0; i< 10; i++){
-    //     printf("%d ", depth_data[i]);
-    // }
-    // printf("\n");
-    // for (int i=200; i< 240; i++){
-    //     printf("%d ", depth_data[i]);
-    // }
-    // printf("\n");
-
     memset(pointcloud, 0, sizeof(pointcloud));
 
     int dx, dy;
@@ -67,12 +42,4 @@ const void * get_pointcloud(const void * depth_image,
     }
 
     return pointcloud;
-    // npy_intp dims[3] = {depth_intrin.height, depth_intrin.width, 3};
-
-    // return PyArray_SimpleNewFromData(
-    //     3,
-    //     dims,
-    //     NPY_FLOAT,
-    //     (void*) &pointcloud
-    //     );
 }
