@@ -130,7 +130,7 @@ class Device(object):
         for s in self.streams:
             if s.native:
                 setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
-            setattr(Device, s.name, property(self._get_stream_clojure(s)))
+            setattr(Device, s.name, property(self._get_stream_closure(s)))
 
         self._depth_scale = self._get_depth_scale()
 
@@ -143,7 +143,7 @@ class Device(object):
             ctypes.byref(e))
         return _rs_intrinsics
 
-    def _get_stream_clojure(self, s):
+    def _get_stream_closure(self, s):
         def get_stream_data(s):
             lrs.rs_get_frame_data.restype = ndpointer(dtype=s.dtype, shape=s.shape)
             return lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
@@ -154,7 +154,7 @@ class Device(object):
         return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
 
     def stop(self):
-        """Stop a device  ##and delete the contexte
+        """Stop a device
         """
         lrs.rs_stop_device(self.dev, ctypes.byref(e));
 
