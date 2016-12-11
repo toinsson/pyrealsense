@@ -3,6 +3,7 @@ os: linux
 language: python
 
 sudo: required
+dist: trusty
 
 before_install:
     sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test;
