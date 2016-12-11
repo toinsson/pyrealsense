@@ -1,6 +1,10 @@
 # pyrealsense
 Simple ctypes extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library. 
 
+## dependencies
+
+The library depends on [pycparser](https://github.com/eliben/pycparser) for parsing the `librealsense` h files and extract the needed enums and structures, as well as numpy for data shuffling.
+
 ## installation
 
     python setup.py install
@@ -29,3 +33,5 @@ To this point, this wrapper has only been tested with:
 - Linux architecture
 - SR300 camera
 
+## build status
+Linux, python 2 and 3: https://travis-ci.org/toinsson/pyrealsense.svg?branch=master
