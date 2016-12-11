@@ -1,5 +1,32 @@
+os: linux
+
 language: python
 
+sudo: required
+
+before_install:
+    sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test;
+    wget https://github.com/glfw/glfw/releases/download/3.1.1/glfw-3.1.1.zip;
+    sudo apt-get update;
+
+    sudo apt-get install -qq build-essential xorg-dev libglu1-mesa-dev libglew-dev libglm-dev;
+    sudo apt-get install -qq cmake;
+    sudo apt-get install -qq libusb-1.0-0-dev ;
+
+    cmake --version;
+
+    unzip glfw-3.1.1.zip;
+    cd glfw-3.1.1;
+    sudo cmake -G "Unix Makefiles" -DBUILD_SHARED_LIBS=ON;
+    sudo make;
+    sudo make install;
+    cd ..;
+    uname -a;
+    mkdir build;
+    cd build;
+    cmake .. -DBUILD_EXAMPLES:BOOL=true;
+    make;
+
 install:
-  - pip install pycparser numpy
-  - python setup.py install
+    - pip install pycparser numpy
+    - python setup.py install
