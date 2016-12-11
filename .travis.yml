@@ -25,7 +25,7 @@ before_install:
 
     
     uname -a;
-    git clone https://github.com/IntelRealSense/librealsense.git
+    git clone "https://github.com/IntelRealSense/librealsense.git"
     cd librealsense
     git checkout v1.9.7
     mkdir build;
