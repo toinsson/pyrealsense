@@ -27,7 +27,8 @@ before_install:
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
     git checkout v1.9.7;
-    make $$ sudo make install;
+    make; 
+    sudo make install;
     cd ..;
 
 install:
