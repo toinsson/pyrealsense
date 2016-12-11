@@ -28,6 +28,17 @@ def pp(fun, *args):
 
 e = ctypes.POINTER(rs_error)()
 
+
+
+class RealsenseError(Exception):
+    """Error thrown during the processing in case the processing chain needs to be exited.
+    """
+    def __init__(self, function, args, message):
+        self.function = function
+        self.args = args
+        self.message = message
+
+
 def _check_error():
     global e
     try:
@@ -38,7 +49,10 @@ def _check_error():
             pp(lrs.rs_get_failed_args, e),
             ))
         print("    {}".format(pp(lrs.rs_get_error_message, e)))
-        sys.exit(0)
+        # sys.exit(0)
+        raise RealsenseError(pp(lrs.rs_get_failed_function, e),
+                pp(lrs.rs_get_failed_args, e),
+                pp(lrs.rs_get_error_message, e))
 
     except ValueError:
         # no error
@@ -53,9 +67,12 @@ def start():
         ctx = lrs.rs_create_context(cnst.RS_API_VERSION, ctypes.byref(e))
         _check_error()
 
+    n_devices = lrs.rs_get_device_count(ctx, ctypes.byref(e))
     print("There are {} connected RealSense devices.".format(
-    lrs.rs_get_device_count(ctx, ctypes.byref(e))))
+    n_devices))
     _check_error()
+
+    return n_devices
 
 
 def stop():
