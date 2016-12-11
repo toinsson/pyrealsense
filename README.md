@@ -34,4 +34,4 @@ To this point, this wrapper has only been tested with:
 - SR300 camera
 
 ## build status
-Linux, python 2 and 3: https://travis-ci.org/toinsson/pyrealsense.svg?branch=master
+Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/pyrealsense.svg?branch=master)](https://travis-ci.org/toinsson/pyrealsense)
