@@ -23,11 +23,10 @@ before_install:
     sudo make install;
     cd ..;
 
-    
     uname -a;
-    git clone "https://github.com/IntelRealSense/librealsense.git"
-    cd librealsense
-    git checkout v1.9.7
+    git clone https://github.com/IntelRealSense/librealsense.git;
+    cd librealsense;
+    git checkout v1.9.7;
     mkdir build;
     cd build;
     cmake .. -DBUILD_EXAMPLES:BOOL=true;
