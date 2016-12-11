@@ -27,10 +27,8 @@ before_install:
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
     git checkout v1.9.7;
-    mkdir build;
-    cd build;
-    cmake .. -DBUILD_EXAMPLES:BOOL=true;
-    make install;
+    make $$ sudo make install;
+    cd ..;
 
 install:
     - pip install pycparser numpy
