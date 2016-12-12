@@ -1,22 +1,12 @@
-import pyrealsense as pyrs
-import matplotlib.pyplot as plt
-
-pyrs.start()
-dev = pyrs.Device()  #ivcam_preset = pyrs.cnst.rs_ivcam_preset.RS_IVCAM_PRESET_GESTURE_RECOGNITION
-
 import time
-import matplotlib.pyplot as plt
-import pyrealsense as pyrs
-pyrs.start()
-time.sleep(2)
-
-dev.wait_for_frame()
-cm = dev.colour
-plt.imshow(cm)
-plt.show()
-
-import cv2
 import numpy as np
+import cv2
+import pyrealsense as pyrs
+
+import ipdb; ipdb.set_trace()
+
+pyrs.start()
+dev = pyrs.Device()
 
 cnt = 0
 last = time.time()

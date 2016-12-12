@@ -40,4 +40,4 @@ install:
 
 script:
     cd tests
-    nosetests test.py
+    nosetests test_offline.py

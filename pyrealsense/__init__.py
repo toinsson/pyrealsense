@@ -5,8 +5,7 @@ import logging
 from numpy.ctypeslib import ndpointer
 import ctypes
 
-from pyrealsense import constants as cnst
-from pyrealsense.constants import rs_stream, rs_format
+from pyrealsense.constants import RS_API_VERSION, rs_stream, rs_format
 from pyrealsense.stream import ColourStream, DepthStream, PointStream, CADStream
 from pyrealsense.to_wrap import rs_error, rs_intrinsics
 
@@ -38,6 +37,10 @@ class RealsenseError(Exception):
         self.args = args
         self.message = message
 
+    def __str__(self):
+        args = "".join([c for c in self.args])
+        return "{}({}) crashed with: {}".format(self.function, args, self.message)
+
 
 def _check_error():
     global e
@@ -64,12 +67,11 @@ def start():
     """
     global ctx
     if not ctx:
-        ctx = lrs.rs_create_context(cnst.RS_API_VERSION, ctypes.byref(e))
+        ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
         _check_error()
 
     n_devices = lrs.rs_get_device_count(ctx, ctypes.byref(e))
-    print("There are {} connected RealSense devices.".format(
-    n_devices))
+    print("There are {} connected RealSense devices.".format(n_devices))
     _check_error()
 
     return n_devices
@@ -131,7 +133,23 @@ class Device(object):
                 setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
             setattr(Device, s.name, property(self._get_stream_closure(s)))
 
-        self._depth_scale = self._get_depth_scale()
+        ## add manually depth_scale and manual pointcloud
+        for s in self.streams:
+            if s.name == 'depth':
+                setattr(Device, 'depth_scale', property(lambda x: self._get_depth_scale()))
+
+            if s.name == 'points':
+                setattr(Device, 'pointcloud', property(lambda x: self._get_pointcloud()))
+
+    def stop(self):
+        """Stop a device
+        """
+        lrs.rs_stop_device(self.dev, ctypes.byref(e));
+
+    def wait_for_frame(self):
+        """Block until new frames are available
+        """
+        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
 
     def _get_stream_intrinsics(self, stream):
         _rs_intrinsics = rs_intrinsics()
@@ -152,16 +170,17 @@ class Device(object):
         lrs.rs_get_device_depth_scale.restype = ctypes.c_float
         return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
 
-    def stop(self):
-        """Stop a device
-        """
-        lrs.rs_stop_device(self.dev, ctypes.byref(e));
+    def _get_pointcloud(self):
+        lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
+        depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
 
-    def wait_for_frame(self):
-        """Block until new frames are available
-        """
-        lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+        ## ugly fix for outliers 
+        depth[0,:2] = 0
 
-    @property
-    def depth_scale(self):
-        return self._depth_scale
+        rsutilwrapper.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
+
+        return rsutilwrapper.get_pointcloud(
+            ctypes.c_void_p(depth.ctypes.data),
+            ctypes.byref(self.depth_intrinsics),
+            ctypes.byref(ctypes.c_float(self.depth_scale)))
+
