@@ -11,6 +11,10 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
 ## Usage
 
+    ## setup logging
+    import logging
+    logging.basicConfig()
+
     ## import the package
     import pyrealsense as pyrs
 
