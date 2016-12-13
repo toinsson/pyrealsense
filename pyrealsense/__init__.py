@@ -130,8 +130,9 @@ class Device(object):
         ## add stream property and intrinsics
         for s in self.streams:
             if s.native:
-                setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.format))
-            setattr(Device, s.name, property(self._get_stream_closure(s)))
+                setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.stream))
+
+            setattr(Device, s.name, property(self._get_stream_data_closure(s)))
 
         ## add manually depth_scale and manual pointcloud
         for s in self.streams:
@@ -160,7 +161,7 @@ class Device(object):
             ctypes.byref(e))
         return _rs_intrinsics
 
-    def _get_stream_closure(self, s):
+    def _get_stream_data_closure(self, s):
         def get_stream_data(s):
             lrs.rs_get_frame_data.restype = ndpointer(dtype=s.dtype, shape=s.shape)
             return lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
