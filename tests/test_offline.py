@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 import pyrealsense as pyrs
 
 class TestStart(TestCase):
@@ -8,7 +7,6 @@ class TestStart(TestCase):
             pyrs.start()
         except pyrs.RealsenseError as e:
             self.assertTrue(e.function == 'rs_create_context')
-
 
 class TestDevice(TestCase):
     def test_is_not_created(self):

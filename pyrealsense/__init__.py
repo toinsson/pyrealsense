@@ -1,6 +1,8 @@
 import sys
 
 import logging
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 from numpy.ctypeslib import ndpointer
 import ctypes
@@ -28,10 +30,8 @@ def pp(fun, *args):
 e = ctypes.POINTER(rs_error)()
 
 
-
 class RealsenseError(Exception):
-    """Error thrown during the processing in case the processing chain needs to be exited.
-    """
+    """Error thrown during the processing in case the processing chain needs to be exited."""
     def __init__(self, function, args, message):
         self.function = function
         self.args = args
@@ -47,12 +47,12 @@ def _check_error():
     try:
         e.contents
 
-        print("rs_error was raised when calling {}({})".format(
+        logger.error("rs_error was raised when calling {}({})".format(
             pp(lrs.rs_get_failed_function, e),
             pp(lrs.rs_get_failed_args, e),
             ))
-        print("    {}".format(pp(lrs.rs_get_error_message, e)))
-        # sys.exit(0)
+        logger.error("    {}".format(pp(lrs.rs_get_error_message, e)))
+
         raise RealsenseError(pp(lrs.rs_get_failed_function, e),
                 pp(lrs.rs_get_failed_args, e),
                 pp(lrs.rs_get_error_message, e))
@@ -63,23 +63,22 @@ def _check_error():
 
 ctx = 0
 def start():
-    """Start the service. Can only be one running.
-    """
+    """Start the service. Can only be one running."""
     global ctx
+
     if not ctx:
         ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
         _check_error()
 
     n_devices = lrs.rs_get_device_count(ctx, ctypes.byref(e))
-    print("There are {} connected RealSense devices.".format(n_devices))
+    logger.info("There are {} connected RealSense devices.".format(n_devices))
     _check_error()
 
     return n_devices
 
 
 def stop():
-    """Stop the service
-    """
+    """Stop the service."""
     global ctx
     lrs.rs_delete_context(ctx, ctypes.byref(e));
     ctx = 0
@@ -99,14 +98,14 @@ class Device(object):
         self.dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
         _check_error()
 
-        print("Using device {}, an {}".format(
+        logger.info("Using device {}, an {}".format(
             device_id, 
             pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))))
         _check_error();
-        print("    Serial number: {}".format(
+        logger.info("    Serial number: {}".format(
             pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))))
         _check_error();
-        print("    Firmware version: {}".format(
+        logger.info("    Firmware version: {}".format(
             pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
         _check_error();
 
@@ -143,13 +142,11 @@ class Device(object):
                 setattr(Device, 'pointcloud', property(lambda x: self._get_pointcloud()))
 
     def stop(self):
-        """Stop a device
-        """
+        """Stop a device."""
         lrs.rs_stop_device(self.dev, ctypes.byref(e));
 
     def wait_for_frame(self):
-        """Block until new frames are available
-        """
+        """Block until new frames are available."""
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
 
     def _get_stream_intrinsics(self, stream):
