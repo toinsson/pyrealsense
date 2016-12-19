@@ -87,10 +87,10 @@ def stop():
 class Device(object):
     """Camera device."""
     def __init__(self,
-            device_id = 0,
-            streams = [ColourStream(), DepthStream(), PointStream(), CADStream()],
-            depth_control_preset = None,
-            ivcam_preset = None):
+        device_id = 0,
+        streams = [ColourStream(), DepthStream(), PointStream(), CADStream()],
+        depth_control_preset = None,
+        ivcam_preset = None):
         super(Device, self).__init__()
 
         global ctx
@@ -109,12 +109,6 @@ class Device(object):
             pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
         _check_error();
 
-        ## depth control preset
-        if depth_control_preset:
-            rsutilwrapper._apply_depth_control_preset(self.dev, depth_control_preset)
-        ## ivcam preset
-        if ivcam_preset:
-            rsutilwrapper._apply_ivcam_preset(self.dev, ivcam_preset)
 
         self.streams = streams
         for s in self.streams:
@@ -125,6 +119,14 @@ class Device(object):
                 _check_error();
 
         lrs.rs_start_device(self.dev, ctypes.byref(e))
+
+        ## depth control preset
+        if depth_control_preset:
+            rsutilwrapper._apply_depth_control_preset(self.dev, depth_control_preset)
+
+        ## ivcam preset
+        if ivcam_preset:
+            rsutilwrapper._apply_ivcam_preset(self.dev, ivcam_preset)
 
         ## add stream property and intrinsics
         for s in self.streams:
@@ -148,6 +150,14 @@ class Device(object):
     def wait_for_frame(self):
         """Block until new frames are available."""
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+
+    def get_device_option(self, option):
+        """Get device option."""
+        return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
+
+    def set_device_option(self, option, value):
+        """Set device option."""
+        return lrs.rs_set_device_option(self.dev, option, ctypes.byref(e))
 
     def _get_stream_intrinsics(self, stream):
         _rs_intrinsics = rs_intrinsics()

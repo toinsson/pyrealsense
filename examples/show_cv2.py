@@ -1,9 +1,11 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+
 import time
 import numpy as np
 import cv2
 import pyrealsense as pyrs
 
-import ipdb; ipdb.set_trace()
 
 pyrs.start()
 dev = pyrs.Device()

@@ -1,5 +1,5 @@
 # Pyrealsense
-Simple ctypes extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library. 
+Simple [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
 
 ## Dependencies
 
@@ -13,7 +13,7 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
     ## setup logging
     import logging
-    logging.basicConfig()
+    logging.basicConfig(level=logging.INFO)
 
     ## import the package
     import pyrealsense as pyrs
@@ -34,11 +34,12 @@ Different devices can be created from the `Device` class. They are defined by de
 
 The available streams are either native or synthetic, and each one will create a property on the Device instancve that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is colour, depth, points, cad or dac. To get access to new data, `Device.wait_for_frame` has to be called.
 
-## caveats
+## Caveats
 To this point, this wrapper has only been tested with:
-- Python 2.x
-- Linux architecture
+- Ubuntu 16.04 LTS
+- Python 2.7
 - SR300 camera
+- [librealsense v1.9.7](https://github.com/IntelRealSense/librealsense/tree/v1.9.7)
 
-## build status
+## Build Status
 Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/pyrealsense.svg?branch=master)](https://travis-ci.org/toinsson/pyrealsense)
