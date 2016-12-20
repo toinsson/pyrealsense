@@ -10,6 +10,7 @@ import ctypes
 from pyrealsense.constants import RS_API_VERSION, rs_stream, rs_format
 from pyrealsense.stream import ColourStream, DepthStream, PointStream, CADStream
 from pyrealsense.to_wrap import rs_error, rs_intrinsics
+from pyrealsense.utils import pp, _check_error
 
 
 # hack to load "extension" module
@@ -17,69 +18,35 @@ import os
 _DIRNAME = os.path.dirname(__file__)
 rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
 
+
 ## import C lib
 lrs = ctypes.CDLL('librealsense.so')
 
 
-def pp(fun, *args):
-    """Wrapper for printing char pointer from ctypes."""
-    fun.restype = ctypes.POINTER(ctypes.c_char)
-    ret = fun(*args)
-    return ctypes.cast(ret, ctypes.c_char_p).value
-
+## global variables
 e = ctypes.POINTER(rs_error)()
-
-
-class RealsenseError(Exception):
-    """Error thrown during the processing in case the processing chain needs to be exited."""
-    def __init__(self, function, args, message):
-        self.function = function
-        self.args = args
-        self.message = message
-
-    def __str__(self):
-        args = "".join([c for c in self.args])
-        return "{}({}) crashed with: {}".format(self.function, args, self.message)
-
-
-def _check_error():
-    global e
-    try:
-        e.contents
-
-        logger.error("rs_error was raised when calling {}({})".format(
-            pp(lrs.rs_get_failed_function, e),
-            pp(lrs.rs_get_failed_args, e),
-            ))
-        logger.error("    {}".format(pp(lrs.rs_get_error_message, e)))
-
-        raise RealsenseError(pp(lrs.rs_get_failed_function, e),
-                pp(lrs.rs_get_failed_args, e),
-                pp(lrs.rs_get_error_message, e))
-
-    except ValueError:
-        # no error
-        pass
-
 ctx = 0
+
+
 def start():
     """Start the service. Can only be one running."""
-    global ctx
+    global ctx, e
 
     if not ctx:
         ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
-        _check_error()
+        _check_error(e)
 
     n_devices = lrs.rs_get_device_count(ctx, ctypes.byref(e))
     logger.info("There are {} connected RealSense devices.".format(n_devices))
-    _check_error()
+    _check_error(e)
 
     return n_devices
 
 
 def stop():
     """Stop the service."""
-    global ctx
+    global ctx, e
+
     lrs.rs_delete_context(ctx, ctypes.byref(e));
     ctx = 0
 
@@ -93,22 +60,20 @@ class Device(object):
         ivcam_preset = None):
         super(Device, self).__init__()
 
-        global ctx
+        global ctx, e
 
         self.dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
-        _check_error()
+        _check_error(e)
+        self.name = pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))
+        _check_error(e);
+        self.serial = pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))
+        _check_error(e);
+        self.version = pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))
+        _check_error(e);
 
-        logger.info("Using device {}, an {}".format(
-            device_id, 
-            pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))))
-        _check_error();
-        logger.info("    Serial number: {}".format(
-            pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))))
-        _check_error();
-        logger.info("    Firmware version: {}".format(
-            pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))))
-        _check_error();
-
+        logger.info("Using device {}, an {}".format(device_id, self.name))
+        logger.info("    Serial number: {}".format(self.serial))
+        logger.info("    Firmware version: {}".format(self.version))
 
         self.streams = streams
         for s in self.streams:
@@ -116,7 +81,7 @@ class Device(object):
                 lrs.rs_enable_stream(self.dev,
                     s.stream, s.width, s.height, s.format, s.fps,
                     ctypes.byref(e));
-                _check_error();
+                _check_error(e);
 
         lrs.rs_start_device(self.dev, ctypes.byref(e))
 
@@ -182,12 +147,12 @@ class Device(object):
         lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(480,640))
         depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
 
-        ## ugly fix for outliers 
+        ## ugly fix for outliers
         depth[0,:2] = 0
 
-        rsutilwrapper.get_pointcloud.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
+        rsutilwrapper.deproject_depth.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
 
-        return rsutilwrapper.get_pointcloud(
+        return rsutilwrapper.deproject_depth(
             ctypes.c_void_p(depth.ctypes.data),
             ctypes.byref(self.depth_intrinsics),
             ctypes.byref(ctypes.c_float(self.depth_scale)))

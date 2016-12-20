@@ -32,7 +32,7 @@ The server for Realsense devices is started with `pyrs.start()` which will print
 
 Different devices can be created from the `Device` class. They are defined by device id and streams passed on creation. The default behaviour create a device with `id = 0` and setup the colour, depth, pointcloud and colour_aligned_depth streams.
 
-The available streams are either native or synthetic, and each one will create a property on the Device instancve that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is colour, depth, points, cad or dac. To get access to new data, `Device.wait_for_frame` has to be called.
+The available streams are either native or synthetic, and each one will create a property on the Device instance that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is colour, depth, points, cad or dac. To get access to new data, `Device.wait_for_frame` has to be called.
 
 ## Caveats
 To this point, this wrapper has only been tested with:
