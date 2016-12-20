@@ -1,4 +1,5 @@
 import sys
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -13,10 +14,12 @@ from pyrealsense.to_wrap import rs_error, rs_intrinsics
 from pyrealsense.utils import pp, _check_error
 
 
-# hack to load "extension" module
-import os
+## hacky way to load "extension" module
 _DIRNAME = os.path.dirname(__file__)
-rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
+for file in os.listdir(_DIRNAME):
+    if file.endswith(".so"):
+        rsutilwrapper = file
+rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME, rsutilwrapper))
 
 
 ## import C lib
