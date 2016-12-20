@@ -1,3 +1,9 @@
+"""PyRealSense wrapper.
+
+This is the **main module**, and exposes only a few function, like start and stop the context manager, 
+as well as the main Device class.
+
+"""
 import sys
 
 import logging
@@ -16,7 +22,8 @@ from pyrealsense.utils import pp, _check_error
 # hack to load "extension" module
 import os
 _DIRNAME = os.path.dirname(__file__)
-rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
+if False:
+    rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME,'rsutilwrapper.so'))
 
 
 ## import C lib
@@ -44,7 +51,7 @@ def start():
 
 
 def stop():
-    """Stop the service."""
+    """Stop the service and set back the context to 0."""
     global ctx, e
 
     lrs.rs_delete_context(ctx, ctypes.byref(e));

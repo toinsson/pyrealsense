@@ -1,3 +1,5 @@
+"""Offline module that allows to deproject stored depth arrays to pointcloud.
+"""
 from os import path
 import yaml
 
@@ -8,7 +10,8 @@ from pyrealsense.to_wrap import rs_intrinsics
 
 # hack to load "extension" module
 _DIRNAME = path.dirname(__file__)
-rsutilwrapper = ctypes.CDLL(path.join(_DIRNAME,'rsutilwrapper.so'))
+if False:
+    rsutilwrapper = ctypes.CDLL(path.join(_DIRNAME,'rsutilwrapper.so'))
 
 
 ## global variable
