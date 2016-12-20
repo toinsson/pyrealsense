@@ -4,6 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+## import C lib
+lrs = ctypes.CDLL('librealsense.so')
 
 class RealsenseError(Exception):
     """Error thrown during the processing in case the processing chain needs to be exited."""
