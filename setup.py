@@ -39,7 +39,7 @@ def get_enumlist(obj):
             return get_enumlist(c)
 
 def write_enumlist(f, obj, name):
-    classname = "class " + name + ":"
+    classname = "class " + name + "(object):"
     enumerates = []
     for i, (cn, c) in enumerate(obj.children()):
         enumerates.append("    "+c.name + " = " + str(i))

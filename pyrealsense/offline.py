@@ -1,3 +1,4 @@
+import os
 from os import path
 import yaml
 
@@ -6,9 +7,13 @@ import ctypes
 
 from pyrealsense.to_wrap import rs_intrinsics
 
-# hack to load "extension" module
-_DIRNAME = path.dirname(__file__)
-rsutilwrapper = ctypes.CDLL(path.join(_DIRNAME,'rsutilwrapper.so'))
+
+## hacky way to load "extension" module
+_DIRNAME = os.path.dirname(__file__)
+for file in os.listdir(_DIRNAME):
+    if file.endswith(".so"):
+        rsutilwrapper = file
+rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME, rsutilwrapper))
 
 
 ## global variable
@@ -71,3 +76,4 @@ def deproject_depth(depth):
         ctypes.c_void_p(depth.ctypes.data),
         ctypes.byref(depth_intrinsics),
         ctypes.byref(ctypes.c_float(depth_scale)))
+

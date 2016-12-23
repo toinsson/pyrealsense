@@ -75,3 +75,4 @@ class DACStream(Stream):
         super(DACStream, self).__init__(name, native, stream, width, height, format, fps)
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
+

@@ -19,3 +19,4 @@ class rs_error(ctypes.Structure):
                 ("function", ctypes.POINTER(ctypes.c_char)),
                 ("args", ctypes.c_char_p),
                 ]
+

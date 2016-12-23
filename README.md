@@ -1,9 +1,10 @@
 # Pyrealsense
+
 Simple [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
 
 ## Dependencies
 
-The library depends on [pycparser](https://github.com/eliben/pycparser) for parsing the librealsense h files and extract enums and structures definitions. Numpy is used for generic data shuffling.
+The library depends on [pycparser](https://github.com/eliben/pycparser) for parsing the librealsense h files and extracting necessary enums and structures definitions. Numpy is used for generic data shuffling.
 
 ## Installation
 

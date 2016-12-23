@@ -2,7 +2,7 @@ import ctypes
 
 import logging
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger.addHandler(logging.NullHandler())  ## needed ?
 
 ## import C lib
 lrs = ctypes.CDLL('librealsense.so')
@@ -43,3 +43,4 @@ def pp(fun, *args):
     fun.restype = ctypes.POINTER(ctypes.c_char)
     ret = fun(*args)
     return ctypes.cast(ret, ctypes.c_char_p).value
+

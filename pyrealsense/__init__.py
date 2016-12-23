@@ -16,9 +16,9 @@ from pyrealsense.utils import pp, _check_error
 
 ## hacky way to load "extension" module
 _DIRNAME = os.path.dirname(__file__)
-for file in os.listdir(_DIRNAME):
-    if file.endswith(".so"):
-        rsutilwrapper = file
+for _file in os.listdir(_DIRNAME):
+    if _file.endswith(".so"):
+        rsutilwrapper = _file
 rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME, rsutilwrapper))
 
 
@@ -68,11 +68,11 @@ class Device(object):
         self.dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
         _check_error(e)
         self.name = pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))
-        _check_error(e);
+        _check_error(e)
         self.serial = pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))
-        _check_error(e);
+        _check_error(e)
         self.version = pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))
-        _check_error(e);
+        _check_error(e)
 
         logger.info("Using device {}, an {}".format(device_id, self.name))
         logger.info("    Serial number: {}".format(self.serial))
@@ -121,11 +121,19 @@ class Device(object):
 
     def get_device_option(self, option):
         """Get device option."""
+        lrs.rs_get_device_option.restype = ctypes.c_double
         return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
+
+    def get_device_option_description(self, option):
+        """Get the device option description."""
+        return pp(lrs.rs_get_device_option_description, 
+            self.dev, ctypes.c_uint(option), ctypes.byref(e))
 
     def set_device_option(self, option, value):
         """Set device option."""
-        return lrs.rs_set_device_option(self.dev, option, ctypes.byref(e))
+        lrs.rs_set_device_option(self.dev,
+            ctypes.c_uint(option), ctypes.c_double(value), ctypes.byref(e))
+        _check_error(e)
 
     def _get_stream_intrinsics(self, stream):
         _rs_intrinsics = rs_intrinsics()
