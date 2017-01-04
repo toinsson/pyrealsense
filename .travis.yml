@@ -34,6 +34,7 @@ before_install:
     make;
     sudo make install;
     cd ..;
+    cd ..;
 
 install:
     - pip install pycparser numpy
