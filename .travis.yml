@@ -26,10 +26,12 @@ before_install:
     sudo make install;
     cd ..;
 
-    uname -a;
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
-    make; 
+    mkdir build;
+    cd build;
+    cmake ..;
+    make;
     sudo make install;
     cd ..;
 
