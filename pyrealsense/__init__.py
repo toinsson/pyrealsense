@@ -54,62 +54,81 @@ def stop():
     ctx = 0
 
 
-class Device(object):
+def Device(
+    device_id = 0,
+    streams = [ColourStream(), DepthStream(), PointStream(), CADStream()],
+    depth_control_preset = None,
+    ivcam_preset = None):
     """Camera device."""
-    def __init__(self,
-        device_id = 0,
-        streams = [ColourStream(), DepthStream(), PointStream(), CADStream()],
-        depth_control_preset = None,
-        ivcam_preset = None):
-        super(Device, self).__init__()
 
+    global ctx, e
+
+    dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
+    _check_error(e)
+    name = pp(lrs.rs_get_device_name, dev, ctypes.byref(e))
+    _check_error(e)
+    serial = pp(lrs.rs_get_device_serial, dev, ctypes.byref(e))
+    _check_error(e)
+    version = pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))
+    _check_error(e)
+
+    logger.info("Using device {}, an {}".format(device_id, name))
+    logger.info("    Serial number: {}".format(serial))
+    logger.info("    Firmware version: {}".format(version))
+
+    ## create a new class for the device
+    class_name = name.split(" ")[-1] + "-" + serial
+    new_device = type(class_name, (DeviceBase,), dict())
+
+    nd = new_device(dev, name, serial, version, streams)
+
+    ## enable the stream and start device
+    for s in streams:
+        if s.native:
+            lrs.rs_enable_stream(dev,
+                s.stream, s.width, s.height, s.format, s.fps,
+                ctypes.byref(e));
+            _check_error(e);
+
+    lrs.rs_start_device(dev, ctypes.byref(e))
+
+    ## depth control preset
+    if depth_control_preset:
+        rsutilwrapper._apply_depth_control_preset(dev, depth_control_preset)
+
+    ## ivcam preset
+    if ivcam_preset:
+        rsutilwrapper._apply_ivcam_preset(dev, ivcam_preset)
+
+    ## add stream property and intrinsics
+    for s in streams:
+        if s.native:
+            setattr(new_device, s.name + '_intrinsics', nd._get_stream_intrinsics(s.stream))
+
+        setattr(new_device, s.name, property(nd._get_stream_data_closure(s)))
+
+    ## add manually depth_scale and manual pointcloud
+    for s in streams:
+        if s.name == 'depth':
+            setattr(new_device, 'depth_scale', property(lambda x: nd._get_depth_scale()))
+
+        if s.name == 'points':
+            setattr(new_device, 'pointcloud', property(lambda x: nd._get_pointcloud()))
+
+    return nd
+
+
+class DeviceBase(object):
+    """Camera device base class."""
+    def __init__(self, dev, name, serial, version, streams):
+        super(DeviceBase, self).__init__()
         global ctx, e
 
-        self.dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
-        _check_error(e)
-        self.name = pp(lrs.rs_get_device_name, self.dev, ctypes.byref(e))
-        _check_error(e)
-        self.serial = pp(lrs.rs_get_device_serial, self.dev, ctypes.byref(e))
-        _check_error(e)
-        self.version = pp(lrs.rs_get_device_firmware_version, self.dev, ctypes.byref(e))
-        _check_error(e)
-
-        logger.info("Using device {}, an {}".format(device_id, self.name))
-        logger.info("    Serial number: {}".format(self.serial))
-        logger.info("    Firmware version: {}".format(self.version))
-
+        self.dev = dev
+        self.name = name
+        self.serial = serial
+        self.version = version
         self.streams = streams
-        for s in self.streams:
-            if s.native:
-                lrs.rs_enable_stream(self.dev,
-                    s.stream, s.width, s.height, s.format, s.fps,
-                    ctypes.byref(e));
-                _check_error(e);
-
-        lrs.rs_start_device(self.dev, ctypes.byref(e))
-
-        ## depth control preset
-        if depth_control_preset:
-            rsutilwrapper._apply_depth_control_preset(self.dev, depth_control_preset)
-
-        ## ivcam preset
-        if ivcam_preset:
-            rsutilwrapper._apply_ivcam_preset(self.dev, ivcam_preset)
-
-        ## add stream property and intrinsics
-        for s in self.streams:
-            if s.native:
-                setattr(self, s.name + '_intrinsics', self._get_stream_intrinsics(s.stream))
-
-            setattr(Device, s.name, property(self._get_stream_data_closure(s)))
-
-        ## add manually depth_scale and manual pointcloud
-        for s in self.streams:
-            if s.name == 'depth':
-                setattr(Device, 'depth_scale', property(lambda x: self._get_depth_scale()))
-
-            if s.name == 'points':
-                setattr(Device, 'pointcloud', property(lambda x: self._get_pointcloud()))
 
     def stop(self):
         """Stop a device."""
