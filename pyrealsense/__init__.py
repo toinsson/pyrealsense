@@ -78,9 +78,9 @@ def Device(
 
     ## create a new class for the device
     class_name = name.split(" ")[-1] + "-" + serial
-    new_device = type(class_name, (DeviceBase,), dict())
+    NewDevice = type(class_name, (DeviceBase,), dict())
 
-    nd = new_device(dev, name, serial, version, streams)
+    nd = NewDevice(dev, name, serial, version, streams)
 
     ## enable the stream and start device
     for s in streams:
@@ -103,17 +103,17 @@ def Device(
     ## add stream property and intrinsics
     for s in streams:
         if s.native:
-            setattr(new_device, s.name + '_intrinsics', nd._get_stream_intrinsics(s.stream))
+            setattr(NewDevice, s.name + '_intrinsics', nd._get_stream_intrinsics(s.stream))
 
-        setattr(new_device, s.name, property(nd._get_stream_data_closure(s)))
+        setattr(NewDevice, s.name, property(nd._get_stream_data_closure(s)))
 
     ## add manually depth_scale and manual pointcloud
     for s in streams:
         if s.name == 'depth':
-            setattr(new_device, 'depth_scale', property(lambda x: nd._get_depth_scale()))
+            setattr(NewDevice, 'depth_scale', property(lambda x: nd._get_depth_scale()))
 
         if s.name == 'points':
-            setattr(new_device, 'pointcloud', property(lambda x: nd._get_pointcloud()))
+            setattr(NewDevice, 'pointcloud', property(lambda x: nd._get_pointcloud()))
 
     return nd
 

@@ -7,7 +7,6 @@ class TestStart(TestCase):
         try:
             pyrs.start()
         except RealsenseError as e:
-            print(e.function)
             self.assertTrue(e.function == b'rs_create_context')
 
 class TestDevice(TestCase):
@@ -15,5 +14,4 @@ class TestDevice(TestCase):
         try:
             pyrs.Device()
         except RealsenseError as e:
-            print(e.function)
             self.assertTrue(e.function == b'rs_get_device')
