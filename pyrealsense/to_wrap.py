@@ -20,3 +20,10 @@ class rs_error(ctypes.Structure):
                 ("args", ctypes.c_char_p),
                 ]
 
+## Mockup for context class
+class rs_context(ctypes.Structure):
+    _fields_ = [("body", ctypes.c_float)]
+
+class rs_device(ctypes.Structure):
+    _fields_ = [("body", ctypes.c_float)]
+

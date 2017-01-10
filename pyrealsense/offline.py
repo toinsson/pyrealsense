@@ -5,7 +5,7 @@ import yaml
 from numpy.ctypeslib import ndpointer
 import ctypes
 
-from pyrealsense.to_wrap import rs_intrinsics
+from .to_wrap import rs_intrinsics
 
 
 ## hacky way to load "extension" module

@@ -1,6 +1,6 @@
 # PyRealsense
 
-Simple [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
+Simple [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library for Linux and Mac OS.
 
 
 ## Dependencies
@@ -67,11 +67,10 @@ The examples are split based on the visualisation technology they require. One s
 
 ## Caveats
 
-To this point, this wrapper has only been tested with:
-- Ubuntu 16.04 LTS
-- Python 2.7
+To this point, this wrapper is tested with:
+- Ubuntu 16.04 LTS, Mac OS X 10.12.2
 - SR300 camera
-- [librealsense v1.9.7](https://github.com/IntelRealSense/librealsense/tree/v1.9.7)
+- [librealsense v1.12.1](https://github.com/IntelRealSense/librealsense/tree/v1.12.1)
 
 The offline module only supports a single camera.
 
@@ -83,5 +82,5 @@ Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/p
 
 ## Possible Pull Requests
 
-- make install platform independent, e.g. support for Windows and Mac Os
-- support for several camera in offline module
+- support for Windows
+- support for several cameras in offline module

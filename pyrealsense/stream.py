@@ -1,6 +1,6 @@
 import ctypes
 
-from pyrealsense.constants import rs_stream, rs_format
+from .constants import rs_stream, rs_format
 
 class Stream(object):
     """docstring for Stream"""
