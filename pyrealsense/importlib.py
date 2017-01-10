@@ -3,15 +3,14 @@ import sys
 import os
 
 os_name = sys.platform
-print(os_name)
-lrs_suffix_mapping = {'darwin':'.dylib', 'linux':'.so'} # 'win':'.dll'}
-rsu_suffix_mapping = {'darwin':'.so', 'linux':'.so'} # 'win':'.dll'}
+lrs_suffix_mapping = {'darwin':'.dylib', 'linux':'.so', 'linux2':'.so'} # 'win':'.dll'}
+rsu_suffix_mapping = {'darwin':'.so', 'linux':'.so', 'linux2':'.so'} # 'win':'.dll'}
 
 try:
     lrs_suffix = lrs_suffix_mapping[os_name]
     rsu_suffix = rsu_suffix_mapping[os_name]
 except KeyError:
-    raise OSError('Windows not supported.')
+    raise OSError('OS not supported.')
 
 ## hacky way to load "extension" module
 def _find_extension_name():
