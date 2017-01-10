@@ -28,15 +28,22 @@ before_install:
 
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
-    git checkout v1.9.7;
+    git checkout v1.12.1
+    mkdir build;
+    cd build;
+    cmake ..;
     make;
     sudo make install;
+    sudo ldconfig;
+    cd ..;
     cd ..;
 
+
 install:
-    - pip install pycparser numpy
+    - pip install pycparser numpy nose
     - python setup.py install
 
 script:
     - cd tests
     - nosetests test_offline.py
+
