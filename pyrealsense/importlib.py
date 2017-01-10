@@ -3,6 +3,7 @@ import sys
 import os
 
 os_name = sys.platform
+print(os_name)
 lrs_suffix_mapping = {'darwin':'.dylib', 'linux':'.so'} # 'win':'.dll'}
 rsu_suffix_mapping = {'darwin':'.so', 'linux':'.so'} # 'win':'.dll'}
 
