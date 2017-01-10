@@ -8,22 +8,11 @@ logger.addHandler(logging.NullHandler())
 from numpy.ctypeslib import ndpointer
 import ctypes
 
-from pyrealsense.constants import RS_API_VERSION, rs_stream, rs_format
-from pyrealsense.stream import ColourStream, DepthStream, PointStream, CADStream
-from pyrealsense.to_wrap import rs_error, rs_intrinsics
-from pyrealsense.utils import pp, _check_error
-
-
-## hacky way to load "extension" module
-_DIRNAME = os.path.dirname(__file__)
-for _file in os.listdir(_DIRNAME):
-    if _file.endswith(".so"):
-        rsutilwrapper = _file
-rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME, rsutilwrapper))
-
-
-## import C lib
-lrs = ctypes.CDLL('librealsense.so')
+from .constants import RS_API_VERSION, rs_stream, rs_format
+from .stream import ColourStream, DepthStream, PointStream, CADStream
+from .to_wrap import rs_error, rs_intrinsics, rs_context, rs_device
+from .utils import pp, _check_error
+from .importlib import rsutilwrapper, lrs
 
 
 ## global variables
@@ -36,6 +25,7 @@ def start():
     global ctx, e
 
     if not ctx:
+        lrs.rs_create_context.restype = ctypes.POINTER(rs_context)
         ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
         _check_error(e)
 
@@ -63,6 +53,7 @@ def Device(
 
     global ctx, e
 
+    lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
     dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
     _check_error(e)
     name = pp(lrs.rs_get_device_name, dev, ctypes.byref(e))
