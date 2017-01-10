@@ -28,7 +28,7 @@ before_install:
 
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
-    git checkout v1.12.1
+    git checkout v1.12.1;
     mkdir build;
     cd build;
     cmake ..;
