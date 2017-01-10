@@ -24,10 +24,10 @@ def start():
     """Start the service. Can only be one running."""
     global ctx, e
 
-    if not ctx:
-        lrs.rs_create_context.restype = ctypes.POINTER(rs_context)
-        ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
-        _check_error(e)
+    # if not ctx:
+    lrs.rs_create_context.restype = ctypes.POINTER(rs_context)
+    ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
+    _check_error(e)
 
     n_devices = lrs.rs_get_device_count(ctx, ctypes.byref(e))
     logger.info("There are {} connected RealSense devices.".format(n_devices))
@@ -40,7 +40,8 @@ def stop():
     """Stop the service."""
     global ctx, e
 
-    lrs.rs_delete_context(ctx, ctypes.byref(e));
+    lrs.rs_delete_context(ctx, ctypes.byref(e))
+    _check_error(e)
     ctx = 0
 
 
