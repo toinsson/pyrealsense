@@ -6,15 +6,7 @@ from numpy.ctypeslib import ndpointer
 import ctypes
 
 from .to_wrap import rs_intrinsics
-
-
-## hacky way to load "extension" module
-_DIRNAME = os.path.dirname(__file__)
-for file in os.listdir(_DIRNAME):
-    if file.endswith(".so"):
-        rsutilwrapper = file
-rsutilwrapper = ctypes.CDLL(os.path.join(_DIRNAME, rsutilwrapper))
-
+from .importlib import rsutilwrapper
 
 ## global variable
 depth_intrinsics = rs_intrinsics()

@@ -22,12 +22,8 @@ class rs_error(ctypes.Structure):
 
 ## Mockup for context class
 class rs_context(ctypes.Structure):
-    _fields_ = [("body", ctypes.c_float)#ctypes.POINTER(ctypes.c_void_p)),
-                # ("devices", ctypes.POINTER(ctypes.c_void_p)),
-                ]
+    _fields_ = [("body", ctypes.c_float)]
 
 class rs_device(ctypes.Structure):
-    _fields_ = [("body", ctypes.c_float)#ctypes.POINTER(ctypes.c_void_p)),
-                # ("devices", ctypes.POINTER(ctypes.c_void_p)),
-                ]
+    _fields_ = [("body", ctypes.c_float)]
 
