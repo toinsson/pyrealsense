@@ -110,6 +110,8 @@ def Device(
     return nd
 
 
+
+
 class DeviceBase(object):
     """Camera device base class."""
     def __init__(self, dev, name, serial, version, streams):
@@ -129,6 +131,16 @@ class DeviceBase(object):
     def wait_for_frame(self):
         """Block until new frames are available."""
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+
+    def get_frame_timestamp(self, stream):
+        """Get the frame number"""
+        lrs.rs_get_frame_timestamp.restype = ctypes.c_double
+        return lrs.rs_get_frame_timestamp(self.dev, stream, ctypes.byref(e))
+
+    def get_frame_number(self, stream):
+        """Get the frame number"""
+        lrs.rs_get_frame_number.restype = ctypes.c_ulonglong
+        return lrs.rs_get_frame_number(self.dev, stream, ctypes.byref(e))
 
     def get_device_option(self, option):
         """Get device option."""
