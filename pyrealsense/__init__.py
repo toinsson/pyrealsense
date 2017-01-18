@@ -128,6 +128,12 @@ class DeviceBase(object):
         """Stop a device."""
         lrs.rs_stop_device(self.dev, ctypes.byref(e));
 
+    def poll_for_frame(self):
+        """Block until new frames are available."""
+        res = lrs.rs_poll_for_frames(self.dev, ctypes.byref(e))
+        _check_error(e)
+        return res
+
     def wait_for_frame(self):
         """Block until new frames are available."""
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
