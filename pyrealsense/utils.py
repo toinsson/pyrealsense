@@ -42,5 +42,9 @@ def pp(fun, *args):
     """Wrapper for printing char pointer from ctypes."""
     fun.restype = ctypes.POINTER(ctypes.c_char)
     ret = fun(*args)
-    return ctypes.cast(ret, ctypes.c_char_p).value
+    val = ctypes.cast(ret, ctypes.c_char_p).value
+
+    ## Python 2/3 difference
+    if type(val) == str: return val
+    if type(val) == bytes: return val.decode("utf-8")
 
