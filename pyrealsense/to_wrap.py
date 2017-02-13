@@ -12,6 +12,11 @@ class rs_intrinsics(ctypes.Structure):
         ("coeffs", ctypes.c_float*5),
     ]
 
+class rs_extrinsics(ctypes.Structure):
+    _fields_ = [
+    ("rotation", ctypes.c_float*9),  # column-major 3x3 rotation matrix
+    ("translation", ctypes.c_float*3),  # element translation vector, in meters
+    ]
 
 ## ERROR handling
 class rs_error(ctypes.Structure):

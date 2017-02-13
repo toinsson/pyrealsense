@@ -10,7 +10,7 @@ import ctypes
 
 from .constants import RS_API_VERSION, rs_stream, rs_format
 from .stream import ColourStream, DepthStream, PointStream, CADStream
-from .to_wrap import rs_error, rs_intrinsics, rs_context, rs_device
+from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
 from .importlib import rsutilwrapper, lrs
 
@@ -110,8 +110,6 @@ def Device(
     return nd
 
 
-
-
 class DeviceBase(object):
     """Camera device base class."""
     def __init__(self, dev, name, serial, version, streams):
@@ -137,6 +135,7 @@ class DeviceBase(object):
     def wait_for_frame(self):
         """Block until new frames are available."""
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
+        _check_error(e)
 
     def get_frame_timestamp(self, stream):
         """Get the frame number"""
@@ -147,6 +146,18 @@ class DeviceBase(object):
         """Get the frame number"""
         lrs.rs_get_frame_number.restype = ctypes.c_ulonglong
         return lrs.rs_get_frame_number(self.dev, stream, ctypes.byref(e))
+
+    def get_device_extrinsics(self, from_stream, to_stream):
+        """Retrieve extrinsic transformation between the viewpoints of two different streams."""
+        _rs_extrinsics = rs_extrinsics()
+        lrs.rs_get_device_extrinsics(
+            self.dev,
+            from_stream,
+            to_stream,
+            ctypes.byref(_rs_extrinsics),
+            ctypes.byref(e))
+        _check_error(e)
+        return _rs_extrinsics
 
     def get_device_option(self, option):
         """Get device option."""
