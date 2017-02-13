@@ -35,9 +35,7 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
 The server for Realsense devices is started with `pyrs.start()` which will printout the number of devices available.
 
-Different devices can be created from the `Device` factory. They are created as their own class defined by device id, name, serial, firmware, as well as streams passed and camera presets.
-
-The default behaviour create a device with `id = 0` and setup the colour, depth, pointcloud and colour_aligned_depth streams.
+Different devices can be created from the `Device` factory. They are created as their own class defined by device id, name, serial, firmware, as well as streams passed and camera presets. The default behaviour create a device with `id = 0` and setup the colour, depth, pointcloud and colour_aligned_depth streams.
 
 The available streams are either native or synthetic, and each one will create a property that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is colour, depth, points, cad or dac. To get access to new data, `Device.wait_for_frame` has to be called once per frame.
 
@@ -57,7 +55,7 @@ d = np.linspace(0, 1000, 480*640, dtype=np.uint16)
 pc = offline.deproject_depth(d)
 ```
 
-The module `offline` allows storing the rs_intrinsics and depth_scale of a device to disk, by default in the home directory in the file `.pyrealsense`. This can later be loaded and used to deproject depth data into pointcloud, which is particularly useful if one need to store large raw video file and want to save some disk memory. Pointcloud data takes 6 times as much data as depth data.
+The module `offline` allows storing the rs_intrinsics and depth_scale of a device to disk, by default in the home directory in the file `.pyrealsense`. This can later be loaded and used to deproject depth data into pointcloud, which is useful to store raw video file and save some disk memory.
 
 
 ## Examples
