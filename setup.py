@@ -63,7 +63,7 @@ module = [
     ]
 
 setup ( name = 'pyrealsense',
-        version = '1.2',
+        version = '1.3',
         ext_modules = module,
         packages = find_packages(),
         )
