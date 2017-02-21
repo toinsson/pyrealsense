@@ -9,7 +9,7 @@ from numpy.ctypeslib import ndpointer
 import ctypes
 
 from .constants import RS_API_VERSION, rs_stream, rs_format
-from .stream import ColourStream, DepthStream, PointStream, CADStream
+from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
 from .importlib import rsutilwrapper, lrs
@@ -47,7 +47,7 @@ def stop():
 
 def Device(
     device_id = 0,
-    streams = [ColourStream(), DepthStream(), PointStream(), CADStream()],
+    streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream()],
     depth_control_preset = None,
     ivcam_preset = None):
     """Camera device."""
