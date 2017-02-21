@@ -66,7 +66,7 @@ class CADStream(Stream):
 class DACStream(Stream):
     def __init__(self, name='dac',
                        native=False,
-                       stream=rs_stream.RS_STREAM_COLOR_ALIGNED_TO_DEPTH,
+                       stream=rs_stream.RS_STREAM_DEPTH_ALIGNED_TO_COLOR,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_XYZ32F,
