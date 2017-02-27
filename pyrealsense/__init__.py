@@ -208,3 +208,26 @@ class DeviceBase(object):
             ctypes.byref(self.depth_intrinsics),
             ctypes.byref(ctypes.c_float(self.depth_scale)))
 
+    def project_point_to_pixel(self, point):
+        ## make sure we have float32
+        point = point.astype(ctypes.c_float)
+
+        rsutilwrapper.project_point_to_pixel.restype = ndpointer(dtype=ctypes.c_float, shape=(2,))
+
+        return rsutilwrapper.project_point_to_pixel(
+            ctypes.c_void_p(point.ctypes.data),
+            ctypes.byref(self.depth_intrinsics),
+            )
+
+    def deproject_pixel_to_point(self, pixel, depth):
+        ## make sure we have float32
+        pixel = pixel.astype(ctypes.c_float)
+        depth = depth.astype(ctypes.c_float)
+
+        rsutilwrapper.deproject_pixel_to_point.restype = ndpointer(dtype=ctypes.c_float, shape=(3,))
+
+        return rsutilwrapper.deproject_pixel_to_point(
+            ctypes.c_void_p(pixel.ctypes.data),
+            ctypes.c_float(depth),
+            ctypes.byref(self.depth_intrinsics),
+            )
