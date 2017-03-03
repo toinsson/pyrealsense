@@ -10,6 +10,7 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
 ## Installation
 
+    pip install pycparser numpy
     python setup.py install
 
 
@@ -66,9 +67,10 @@ The examples are split based on the visualisation technology they require. One s
 ## Caveats
 
 To this point, this wrapper is tested with:
-- Ubuntu 16.04 LTS, Mac OS X 10.12.2
-- SR300 camera
+
 - [librealsense v1.12.1](https://github.com/IntelRealSense/librealsense/tree/v1.12.1)
+- Ubuntu 16.04 LTS, Mac OS X 10.12.2 w/ SR300 camera
+- Mac OS X 10.12.3 w/ R200 camera
 
 The offline module only supports a single camera.
 
