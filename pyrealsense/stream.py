@@ -1,5 +1,4 @@
 import ctypes
-
 from .constants import rs_stream, rs_format
 
 class Stream(object):

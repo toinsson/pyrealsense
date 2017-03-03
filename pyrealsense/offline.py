@@ -1,10 +1,7 @@
-import os
-from os import path
-import yaml
-
-from numpy.ctypeslib import ndpointer
 import ctypes
-
+import yaml
+from os import path
+from numpy.ctypeslib import ndpointer
 from .to_wrap import rs_intrinsics
 from .importlib import rsutilwrapper
 

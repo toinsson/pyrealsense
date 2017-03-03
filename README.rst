@@ -20,6 +20,7 @@ Installation
 
 ::
 
+    pip install pycparser numpy
     python setup.py install
 
 Online Usage
