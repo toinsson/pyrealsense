@@ -1,21 +1,17 @@
-import sys
-import os
-
 import logging
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-from numpy.ctypeslib import ndpointer
 import ctypes
-
+from numpy.ctypeslib import ndpointer
 from .constants import RS_API_VERSION, rs_stream, rs_format
 from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
 from .importlib import rsutilwrapper, lrs
 
-
-## global variables
+# Global variables
 e = ctypes.POINTER(rs_error)()
 ctx = 0
 
@@ -45,14 +41,13 @@ def stop():
     ctx = 0
 
 
-def Device(
-    device_id = 0,
-    streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream()],
-    depth_control_preset = None,
-    ivcam_preset = None):
+def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
     """Camera device."""
 
     global ctx, e
+
+    if streams is None:
+        streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream()]
 
     lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
     dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
@@ -96,14 +91,12 @@ def Device(
     for s in streams:
         if s.native:
             setattr(NewDevice, s.name + '_intrinsics', nd._get_stream_intrinsics(s.stream))
-
         setattr(NewDevice, s.name, property(nd._get_stream_data_closure(s)))
 
     ## add manually depth_scale and manual pointcloud
     for s in streams:
         if s.name == 'depth':
             setattr(NewDevice, 'depth_scale', property(lambda x: nd._get_depth_scale()))
-
         if s.name == 'points':
             setattr(NewDevice, 'pointcloud', property(lambda x: nd._get_pointcloud()))
 
