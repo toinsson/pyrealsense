@@ -1,5 +1,6 @@
 import ctypes
 
+
 class rs_intrinsics(ctypes.Structure):
     _fields_ = [
         ("width", ctypes.c_int),
@@ -8,9 +9,10 @@ class rs_intrinsics(ctypes.Structure):
         ("ppy", ctypes.c_float),
         ("fx", ctypes.c_float),
         ("fy", ctypes.c_float),
-        ("model", ctypes.c_int),        #rs_distortion
+        ("model", ctypes.c_int),        # rs_distortion
         ("coeffs", ctypes.c_float*5),
     ]
+
 
 class rs_extrinsics(ctypes.Structure):
     _fields_ = [
@@ -18,17 +20,17 @@ class rs_extrinsics(ctypes.Structure):
     ("translation", ctypes.c_float*3),  # element translation vector, in meters
     ]
 
-## ERROR handling
-class rs_error(ctypes.Structure):
+
+class rs_error(ctypes.Structure):  # ERROR handling
     _fields_ = [("message", ctypes.c_char_p),
                 ("function", ctypes.POINTER(ctypes.c_char)),
                 ("args", ctypes.c_char_p),
                 ]
 
-## Mockup for context class
-class rs_context(ctypes.Structure):
+
+class rs_context(ctypes.Structure):  # Mockup for context class
     _fields_ = [("body", ctypes.c_float)]
+
 
 class rs_device(ctypes.Structure):
     _fields_ = [("body", ctypes.c_float)]
-
