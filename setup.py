@@ -20,6 +20,8 @@ setup(name='pyrealsense',
 
       description='Simple ctypes extension to the librealsense library for Linux and Mac OS',
       long_description=long_description,
+      author='Antoine Loriette',
+      author_email='antoine.loriette@gmail.com',
       url='https://github.com/toinsson/pyrealsense',
       license='Apache',
 
