@@ -9,7 +9,7 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
 
 ## Installation
-from Pypi:
+from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.4):
 
     pip install pyrealsense
 

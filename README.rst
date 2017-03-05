@@ -18,7 +18,7 @@ shuffling.
 Installation
 ------------
 
-from Pypi:
+from `PyPI <https://pypi.python.org/pypi/pyrealsense/1.4>`__:
 
 ::
 

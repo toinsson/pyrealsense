@@ -16,7 +16,7 @@ module = [Extension('pyrealsense.rsutilwrapper',
                     library_dirs=['/usr/local/lib'], )]
 
 setup(name='pyrealsense',
-      version='1.3',
+      version='1.4',
 
       description='Simple ctypes extension to the librealsense library for Linux and Mac OS',
       long_description=long_description,
