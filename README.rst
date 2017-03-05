@@ -18,6 +18,14 @@ shuffling.
 Installation
 ------------
 
+from Pypi:
+
+::
+
+    pip install pyrealsense
+
+from source:
+
 ::
 
     pip install pycparser numpy

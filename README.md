@@ -9,6 +9,11 @@ The library depends on [pycparser](https://github.com/eliben/pycparser) for pars
 
 
 ## Installation
+from Pypi:
+
+    pip install pyrealsense
+
+from source:
 
     pip install pycparser numpy
     python setup.py install
