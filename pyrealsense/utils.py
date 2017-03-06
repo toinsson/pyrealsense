@@ -1,9 +1,10 @@
-import ctypes
-
 import logging
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())  ## needed ?
+
+import ctypes
+from .importlib import lrs
 
 class RealsenseError(Exception):
     """Error thrown during the processing in case the processing chain needs to be exited."""
@@ -40,4 +41,9 @@ def pp(fun, *args):
     """Wrapper for printing char pointer from ctypes."""
     fun.restype = ctypes.POINTER(ctypes.c_char)
     ret = fun(*args)
-    return ctypes.cast(ret, ctypes.c_char_p).value
+    val = ctypes.cast(ret, ctypes.c_char_p).value
+
+    ## Python 2/3 difference
+    if type(val) == str: return val
+    if type(val) == bytes: return val.decode("utf-8")
+

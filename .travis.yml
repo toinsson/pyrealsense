@@ -15,7 +15,7 @@ before_install:
 
     sudo apt-get install -qq build-essential xorg-dev libglu1-mesa-dev libglew-dev libglm-dev;
     sudo apt-get install -qq cmake;
-    sudo apt-get install -qq libusb-1.0-0-dev ;
+    sudo apt-get install -qq libusb-1.0-0-dev;
 
     cmake --version;
 
@@ -26,18 +26,24 @@ before_install:
     sudo make install;
     cd ..;
 
-    uname -a;
     git clone https://github.com/IntelRealSense/librealsense.git;
     cd librealsense;
-    git checkout v1.9.7;
-    make; 
+    git checkout v1.12.1;
+    mkdir build;
+    cd build;
+    cmake ..;
+    make;
     sudo make install;
+    sudo ldconfig;
+    cd ..;
     cd ..;
 
+
 install:
-    - pip install pycparser numpy
+    - pip install pycparser numpy nose
     - python setup.py install
 
 script:
-    cd tests
-    nosetests test_offline.py
+    - cd tests
+    - nosetests test_offline.py
+

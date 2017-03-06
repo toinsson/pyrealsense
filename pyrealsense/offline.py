@@ -1,18 +1,11 @@
 """Offline module that allows to deproject stored depth arrays to pointcloud.
 """
-from os import path
-import yaml
-
-from numpy.ctypeslib import ndpointer
 import ctypes
-
-from pyrealsense.to_wrap import rs_intrinsics
-
-# hack to load "extension" module
-_DIRNAME = path.dirname(__file__)
-if False:
-    rsutilwrapper = ctypes.CDLL(path.join(_DIRNAME,'rsutilwrapper.so'))
-
+import yaml
+from os import path
+from numpy.ctypeslib import ndpointer
+from .to_wrap import rs_intrinsics
+from .importlib import rsutilwrapper
 
 ## global variable
 depth_intrinsics = rs_intrinsics()
@@ -74,3 +67,4 @@ def deproject_depth(depth):
         ctypes.c_void_p(depth.ctypes.data),
         ctypes.byref(depth_intrinsics),
         ctypes.byref(ctypes.c_float(depth_scale)))
+

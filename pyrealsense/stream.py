@@ -1,6 +1,5 @@
 import ctypes
-
-from pyrealsense.constants import rs_stream, rs_format
+from .constants import rs_stream, rs_format
 
 class Stream(object):
     """docstring for Stream"""
@@ -66,7 +65,7 @@ class CADStream(Stream):
 class DACStream(Stream):
     def __init__(self, name='dac',
                        native=False,
-                       stream=rs_stream.RS_STREAM_COLOR_ALIGNED_TO_DEPTH,
+                       stream=rs_stream.RS_STREAM_DEPTH_ALIGNED_TO_COLOR,
                        width=640,
                        height=480,
                        format=rs_format.RS_FORMAT_XYZ32F,
@@ -75,3 +74,4 @@ class DACStream(Stream):
         super(DACStream, self).__init__(name, native, stream, width, height, format, fps)
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
+

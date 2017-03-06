@@ -19,6 +19,22 @@ void _apply_ivcam_preset(rs_device * device, rs_ivcam_preset preset)
 }
 
 
+float pixel[2];
+const void * project_point_to_pixel(const void * point, const rs_intrinsics * intrin)
+{
+    rs_project_point_to_pixel(pixel, intrin, point);
+    return pixel;
+}
+
+
+float point[3];
+const void * deproject_pixel_to_point(const void * pixel, const float depth, const rs_intrinsics * intrin)
+{
+    rs_deproject_pixel_to_point(point, intrin, pixel, depth);
+    return point;
+}
+
+
 // local memory space for pointcloud - max size
 float pointcloud[480*640*3];
 

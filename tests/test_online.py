@@ -11,5 +11,5 @@ class Test_1_Device(TestCase):
     def test_is_not_created(self):
         cam = pyrs.Device()
         cam.wait_for_frame()
-        c = cam.colour
         self.assertTrue(cam.colour.any())
+        cam.stop()
