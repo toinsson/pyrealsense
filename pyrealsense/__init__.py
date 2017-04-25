@@ -1,8 +1,5 @@
-"""PyRealSense wrapper.
-
-This is the **main module**, and exposes only a few function, like start and stop the context manager, 
+"""This is the **main module**, and exposes only a few function, like start and stop the context manager, 
 as well as the main Device class.
-
 """
 import logging
 
