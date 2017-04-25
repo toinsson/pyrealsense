@@ -41,6 +41,14 @@ def stop():
     ctx = 0
 
 
+class Service(object):
+    """Context manager for Realsense service."""
+    def __enter__(self):
+        start()
+    def __exit__(self, *args):
+        stop()
+
+
 def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
     """Camera device."""
 
