@@ -6,7 +6,7 @@ logger.addHandler(logging.NullHandler())
 import ctypes
 from numpy.ctypeslib import ndpointer
 from .constants import RS_API_VERSION, rs_stream, rs_format
-from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream
+from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
 from .importlib import rsutilwrapper, lrs
@@ -47,7 +47,7 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
     global ctx, e
 
     if streams is None:
-        streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream()]
+        streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream(), InfraredStream()]
 
     lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
     dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
