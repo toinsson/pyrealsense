@@ -1,7 +1,8 @@
 from setuptools import setup, Extension
 from setuptools import find_packages
-from os import path
+from os import path, environ
 import io
+import sys
 
 import numpy as np
 
@@ -9,11 +10,19 @@ here = path.abspath(path.dirname(__file__))
 with io.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+inc_dirs = [np.get_include(), '/usr/local/include/librealsense']
+lib_dirs = ['/usr/local/lib']
+
+if 'PYRS_INCLUDES' in environ:
+    inc_dirs.append(environ['PYRS_INCLUDES'])
+if 'PYRS_LIBS' in environ:
+    lib_dirs.append(environ['PYRS_LIBS'])
+
 module = [Extension('pyrealsense.rsutilwrapper',
-                    sources=['pyrealsense/rsutilwrapper.c'],
+                    sources=['pyrealsense/rsutilwrapper.cpp'],
                     libraries=['realsense'],
-                    include_dirs=[np.get_include(), '/usr/local/include/librealsense'],
-                    library_dirs=['/usr/local/lib'], )]
+                    include_dirs=inc_dirs,
+                    library_dirs=lib_dirs, )]
 
 setup(name='pyrealsense',
       version='1.4',
@@ -36,5 +45,5 @@ setup(name='pyrealsense',
       packages=find_packages(),
       ext_modules=module,
       setup_requires=['numpy',],
-      install_requires=['numpy', 'pycparser'],)
+      install_requires=['numpy', 'pycparser', 'yaml'],)
 

@@ -1,9 +1,22 @@
 import pycparser
 import io
+import sys
+from os import environ, path
 
-# Platform dependent
-rs_h_filename = '/usr/local/include/librealsense/rs.h'
+# construct path to librealsense/rs.h. On Windows must rely
+# on PYRS_INCLUDES, on Linux/OSX also check default location 
+# under /usr/local/include
+if 'PYRS_INCLUDES' not in environ:
+    # if the env var isn't set on Windows, just bail out
+    if sys.platform == 'win32':
+        raise Exception('PYRS_INCLUDES must be set to the location of the librealsense headers!')
+    # on other platforms, fall back on default location
+    rs_h_filename = '/usr/local/include/librealsense/rs.h'
+else:
+    rs_h_filename = path.join(environ['PYRS_INCLUDES'], 'rs.h')
 
+if not path.exists(rs_h_filename):
+    raise Exception('librealsense/rs.h header not found at {}'.format(rs_h_filename))
 
 # Dynamically extract API version
 api_version = 0
