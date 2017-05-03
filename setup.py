@@ -45,5 +45,5 @@ setup(name='pyrealsense',
       packages=find_packages(),
       ext_modules=module,
       setup_requires=['numpy',],
-      install_requires=['numpy', 'pycparser', 'yaml'],)
+      install_requires=['numpy', 'pycparser'],)
 
