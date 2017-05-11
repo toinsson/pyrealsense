@@ -13,12 +13,13 @@ Matplotlib based
 
     import pyrealsense as pyrs
 
-    pyrs.start()
-    dev = pyrs.Device()
+    with pyrs.Service()
+        dev = pyrs.Device()
 
-    dev.wait_for_frame()
-    plt.imshow(dev.colour)
-    plt.show()
+        dev.wait_for_frame()
+        plt.imshow(dev.colour)
+        plt.show()
+
 
 This example is using OpenCV.
 
