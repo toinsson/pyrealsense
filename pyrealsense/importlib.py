@@ -15,14 +15,19 @@ except KeyError:
 ## hacky way to load "extension" module
 def _find_extension_name():
     dirname = os.path.dirname(__file__)
-
+    f_name = ''
     for f in os.listdir(dirname):
         if f.endswith(rsu_suffix):
             f_name = f
-
     return os.path.join(dirname, f_name)
 
-rsutilwrapper = ctypes.CDLL(_find_extension_name())
+## prevent crash for Sphinx when extension is not compiled before hand
+try:
+    rsutilwrapper = ctypes.CDLL(_find_extension_name())
+except OSError:
+    import warnings
+    warnings.warn("rsutilwrapper not found.")
+    rsutilwrapper = None
 
 ## import C lib
 lrs = ctypes.CDLL('librealsense'+lrs_suffix)
