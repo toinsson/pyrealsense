@@ -30,11 +30,10 @@ class ColourStream(Stream):
         self.native = True
         self.stream = rs_stream.RS_STREAM_COLOR
         self.format = rs_format.RS_FORMAT_RGB8,
-
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
 
-        super(ColourStream, self).__init__(name, native, stream, width, height, format, fps)
+        super(ColourStream, self).__init__(self.name, self.native, self.stream, width, height, self.format, fps)
 
 class DepthStream(Stream):
     def __init__(self, name='depth',
