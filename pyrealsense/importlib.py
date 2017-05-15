@@ -30,5 +30,10 @@ except OSError:
     rsutilwrapper = None
 
 ## import C lib
-lrs = ctypes.CDLL('librealsense'+lrs_suffix)
+try:
+    lrs = ctypes.CDLL('librealsense'+lrs_suffix)
+except OSError:
+    import warnings
+    warnings.warn("librealsense not found.")
+    lrs = None
 
