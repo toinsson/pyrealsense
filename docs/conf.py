@@ -18,8 +18,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../pyrealsense'))
-sys.path.insert(0, os.path.abspath('../pyrealsense'))
+
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    sys.path.insert(0, os.path.abspath('../pyrealsense'))
+else:
+    sys.path.insert(0, os.path.abspath('../../pyrealsense'))
 
 
 # -- General configuration ------------------------------------------------

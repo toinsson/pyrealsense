@@ -5,7 +5,7 @@ import io
 import os
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
-    rs_h_filename = './docs/rs.h'
+    rs_h_filename = './rs.h'
 else:
     rs_h_filename = '/usr/local/include/librealsense/rs.h'
 
