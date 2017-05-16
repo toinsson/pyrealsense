@@ -25,3 +25,11 @@ Offline module
     :members:
     :undoc-members:
     :show-inheritance:
+
+constants module
+----------------
+
+.. automodule:: pyrealsense.constants
+    :members:
+    :undoc-members:
+    :show-inheritance:
