@@ -2,28 +2,38 @@ import ctypes
 from .constants import rs_stream, rs_format
 
 class Stream(object):
-    """docstring for Stream"""
+    """Stream object that stores all necessary information for interaction with librealsense.
+    
+    :param string name: name of the stream
+    :param bool native: whether the stream is native or composite
+    :param string stream: from the parsed rs_stream
+    :param int width: name of the stream
+    :param int height: name of the stream
+    :param int format: from the parsed rs_format
+    :param int fps: name of the stream
+    """
     def __init__(self, name, native, stream, width, height, format, fps):
         super(Stream, self).__init__()
         self.name = name
         self.native = native
         self.stream = stream
+        self.format = format
         self.width = width
         self.height = height
-        self.format = format
         self.fps = fps
 
 class ColourStream(Stream):
-    def __init__(self, name='colour',
-                       native=True,
-                       stream=rs_stream.RS_STREAM_COLOR,
-                       width=640,
-                       height=480,
-                       format=rs_format.RS_FORMAT_RGB8,
-                       fps=30):
-        super(ColourStream, self).__init__(name, native, stream, width, height, format, fps)
+    """Colour stream from device, with default parameters. See for possible combinations.
+    """
+    def __init__(self, width=640, height=480, fps=30):
+        self.name = 'colour'
+        self.native = True
+        self.stream = rs_stream.RS_STREAM_COLOR
+        self.format = rs_format.RS_FORMAT_RGB8,
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
+
+        super(ColourStream, self).__init__(self.name, self.native, self.stream, width, height, self.format, fps)
 
 class DepthStream(Stream):
     def __init__(self, name='depth',

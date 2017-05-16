@@ -3,17 +3,27 @@ from setuptools import find_packages
 from os import path
 import io
 
+
 import numpy as np
+
 
 here = path.abspath(path.dirname(__file__))
 with io.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-module = [Extension('pyrealsense.rsutilwrapper',
+
+## dont build extension if on RTD
+import os
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    module = []
+else:
+    module = [Extension('pyrealsense.rsutilwrapper',
                     sources=['pyrealsense/rsutilwrapper.c'],
                     libraries=['realsense'],
                     include_dirs=[np.get_include(), '/usr/local/include/librealsense'],
                     library_dirs=['/usr/local/lib'], )]
+
 
 setup(name='pyrealsense',
       version='1.4',

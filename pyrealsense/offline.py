@@ -1,3 +1,5 @@
+"""Offline module that allows to deproject stored depth arrays to pointcloud.
+"""
 import ctypes
 import yaml
 from os import path
