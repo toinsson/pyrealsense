@@ -3,7 +3,8 @@ pyrealsense
 
 Core module
 -----------
-.. automodule:: pyrealsense
+
+.. automodule:: pyrealsense.core
     :members:
     :undoc-members:
     :show-inheritance:
@@ -26,7 +27,7 @@ Offline module
     :undoc-members:
     :show-inheritance:
 
-constants module
+Constants module
 ----------------
 
 .. automodule:: pyrealsense.constants

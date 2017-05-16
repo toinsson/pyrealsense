@@ -17,7 +17,7 @@ ctx = 0
 
 
 def start():
-    """Start the service. Can only be one running."""
+    """Start librealsense service."""
     global ctx, e
 
     # if not ctx:
@@ -50,7 +50,15 @@ class Service(object):
 
 
 def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
-    """Camera device."""
+    """Camera device, which subclass :class:`DeviceBase` and create properties for each input
+    streams to expose their data.
+
+    :param int device_id: id of the device from :func:`start`
+    :param list(Stream) streams: list of Streams objects :class:`stream.Stream`
+    :param bool depth_control_preset: whether depth control preset
+    :param bool ivcam_preset:  whether ivcam preset
+
+    """
 
     global ctx, e
 
@@ -112,7 +120,8 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
 
 
 class DeviceBase(object):
-    """Camera device base class."""
+    """Camera device base class. It exposes the main function from librealsense.
+    """
     def __init__(self, dev, name, serial, version, streams):
         super(DeviceBase, self).__init__()
         global ctx, e
@@ -124,27 +133,41 @@ class DeviceBase(object):
         self.streams = streams
 
     def stop(self):
-        """Stop a device."""
-        lrs.rs_stop_device(self.dev, ctypes.byref(e));
+        """End data acquisition.
+        """
+        lrs.rs_stop_device(self.dev, ctypes.byref(e))
+        _check_error(e)
 
     def poll_for_frame(self):
-        """Block until new frames are available."""
+        """Check if new frames are available, without blocking.
+
+        :returns: 1 if new frames are available, 0 if no new frames have arrived
+        :raises: :class:`utils.RealsenseError`
+        """
         res = lrs.rs_poll_for_frames(self.dev, ctypes.byref(e))
         _check_error(e)
         return res
 
     def wait_for_frame(self):
-        """Block until new frames are available."""
+        """Block until new frames are available.
+
+        :raises: :class:`utils.RealsenseError`
+        """
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
         _check_error(e)
 
     def get_frame_timestamp(self, stream):
-        """Get the frame number"""
+        """Retrieve the time at which the latest frame on a specific stream was captured.
+
+        :param int stream: stream id
+        """
         lrs.rs_get_frame_timestamp.restype = ctypes.c_double
         return lrs.rs_get_frame_timestamp(self.dev, stream, ctypes.byref(e))
 
     def get_frame_number(self, stream):
-        """Get the frame number"""
+        """Retrieve the frame number for specific stream.
+
+        """
         lrs.rs_get_frame_number.restype = ctypes.c_ulonglong
         return lrs.rs_get_frame_number(self.dev, stream, ctypes.byref(e))
 
@@ -232,3 +255,4 @@ class DeviceBase(object):
             ctypes.c_float(depth),
             ctypes.byref(self.depth_intrinsics),
             )
+
