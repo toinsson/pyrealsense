@@ -56,7 +56,7 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
     Args:
         device_id (int): the device id as hinted by the output from :func:`start`.
         streams (:obj:`list` of :obj:`pyrealsense.stream.Stream`): if None, all streams will be 
-            enabled.
+            enabled with their default parameters (e.g `640x480@30FPS`)
         depth_control_preset (int): optional preset to be applied.
         ivcam_preset (int): optional preset to be applied with input value from
             :obj:`pyrealsense.constants.rs_ivcam_preset`.
@@ -217,7 +217,12 @@ class DeviceBase(object):
             self.dev, ctypes.c_uint(option), ctypes.byref(e))
 
     def set_device_option(self, option, value):
-        """Set device option."""
+        """Set device option.
+    
+        Args:
+            option (int): taken from :class:`pyrealsense.constants.rs_option`.
+            value (double): value to be set for the option.
+        """
         lrs.rs_set_device_option(self.dev,
             ctypes.c_uint(option), ctypes.c_double(value), ctypes.byref(e))
         _check_error(e)
@@ -256,6 +261,15 @@ class DeviceBase(object):
             ctypes.byref(ctypes.c_float(self.depth_scale)))
 
     def project_point_to_pixel(self, point):
+        """Project a 3d point to its 2d pixel coordinate by calling rsutil's 
+        rs_project_point_to_pixel under the hood.
+
+        Args:
+            point (np.array): (x,y,z) coordinate of the point
+
+        Returns:
+            pixel (np.array): (x,y) coordinate of the pixel
+        """
         ## make sure we have float32
         point = point.astype(ctypes.c_float)
 
@@ -267,6 +281,16 @@ class DeviceBase(object):
             )
 
     def deproject_pixel_to_point(self, pixel, depth):
+        """Deproject a 2d pixel to its 3d point coordinate by calling rsutil's 
+        rs_deproject_pixel_to_point under the hood.
+
+        Args:
+            pixel (np.array): (x,y) coordinate of the point
+            depth (float): depth at that pixel
+
+        Returns:
+            point (np.array): (x,y,z) coordinate of the point
+        """
         ## make sure we have float32
         pixel = pixel.astype(ctypes.c_float)
         depth = depth.astype(ctypes.c_float)

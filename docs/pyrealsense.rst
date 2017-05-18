@@ -1,13 +1,10 @@
 pyrealsense package
 ===================
 
-Submodules
-----------
+Module contents
+---------------
 
-pyrealsense.constants module
-----------------------------
-
-.. automodule:: pyrealsense.constants
+.. automodule:: pyrealsense
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,10 +17,10 @@ pyrealsense.core module
     :undoc-members:
     :show-inheritance:
 
-pyrealsense.importlib module
-----------------------------
+pyrealsense.stream module
+-------------------------
 
-.. automodule:: pyrealsense.importlib
+.. automodule:: pyrealsense.stream
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,20 +33,16 @@ pyrealsense.offline module
     :undoc-members:
     :show-inheritance:
 
-pyrealsense.stream module
--------------------------
+pyrealsense.importlib module
+----------------------------
 
-.. automodule:: pyrealsense.stream
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: pyrealsense.importlib
 
 pyrealsense.to_wrap module
 --------------------------
 
 .. automodule:: pyrealsense.to_wrap
     :members:
-    :undoc-members:
     :show-inheritance:
 
 pyrealsense.utils module
@@ -60,11 +53,11 @@ pyrealsense.utils module
     :undoc-members:
     :show-inheritance:
 
+pyrealsense.constants module
+----------------------------
 
-Module contents
----------------
-
-.. automodule:: pyrealsense
+.. automodule:: pyrealsense.constants
     :members:
     :undoc-members:
     :show-inheritance:
+
