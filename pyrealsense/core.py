@@ -6,7 +6,7 @@ logger.addHandler(logging.NullHandler())
 import ctypes
 from numpy.ctypeslib import ndpointer
 from .constants import RS_API_VERSION, rs_stream, rs_format
-from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream
+from .stream import ColourStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
 from .importlib import rsutilwrapper, lrs
@@ -33,7 +33,7 @@ def start():
 
 
 def stop():
-    """Stop the service."""
+    """Stop librealsense service."""
     global ctx, e
 
     lrs.rs_delete_context(ctx, ctypes.byref(e))
@@ -42,7 +42,7 @@ def stop():
 
 
 class Service(object):
-    """Context manager for Realsense service."""
+    """Context manager for librealsense service."""
     def __enter__(self):
         start()
     def __exit__(self, *args):
@@ -53,17 +53,21 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
     """Camera device, which subclass :class:`DeviceBase` and create properties for each input
     streams to expose their data.
 
-    :param int device_id: id of the device from :func:`start`
-    :param list(Stream) streams: list of Streams objects :class:`stream.Stream`
-    :param bool depth_control_preset: whether depth control preset
-    :param bool ivcam_preset:  whether ivcam preset
-
+    Args:
+        device_id (int): the device id as hinted by the output from :func:`start`.
+        streams (:obj:`list` of :obj:`pyrealsense.stream.Stream`): if None, all streams will be 
+            enabled.
+        depth_control_preset (int): optional preset to be applied.
+        ivcam_preset (int): optional preset to be applied with input value from
+            :obj:`pyrealsense.constants.rs_ivcam_preset`.
+    Returns:
+        A subclass of :class:`DeviceBase` which class name includes the device serial number.
     """
 
     global ctx, e
 
     if streams is None:
-        streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream()]
+        streams = [ColourStream(), DepthStream(), PointStream(), CADStream(), DACStream(), InfraredStream()]
 
     lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
     dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
@@ -120,7 +124,8 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
 
 
 class DeviceBase(object):
-    """Camera device base class. It exposes the main function from librealsense.
+    """Camera device base class which should be called via the :func:`Device` factory. It 
+        exposes the main functions from librealsense.
     """
     def __init__(self, dev, name, serial, version, streams):
         super(DeviceBase, self).__init__()
@@ -141,8 +146,11 @@ class DeviceBase(object):
     def poll_for_frame(self):
         """Check if new frames are available, without blocking.
 
-        :returns: 1 if new frames are available, 0 if no new frames have arrived
-        :raises: :class:`utils.RealsenseError`
+        Returns:
+            int: 1 if new frames are available, 0 if no new frames have arrived
+        
+        Raises: 
+            :class:`utils.RealsenseError`: in case librealsense reports a problem.
         """
         res = lrs.rs_poll_for_frames(self.dev, ctypes.byref(e))
         _check_error(e)
@@ -151,7 +159,8 @@ class DeviceBase(object):
     def wait_for_frame(self):
         """Block until new frames are available.
 
-        :raises: :class:`utils.RealsenseError`
+        Raises: 
+            :class:`utils.RealsenseError`: in case librealsense reports a problem.
         """
         lrs.rs_wait_for_frames(self.dev, ctypes.byref(e))
         _check_error(e)
@@ -167,12 +176,26 @@ class DeviceBase(object):
     def get_frame_number(self, stream):
         """Retrieve the frame number for specific stream.
 
+        Args:
+            stream (int): value from :class:`pyrealsense.constants.rs_stream`.
+
+        Returns:
+            (double): frame number.
         """
         lrs.rs_get_frame_number.restype = ctypes.c_ulonglong
         return lrs.rs_get_frame_number(self.dev, stream, ctypes.byref(e))
 
     def get_device_extrinsics(self, from_stream, to_stream):
-        """Retrieve extrinsic transformation between the viewpoints of two different streams."""
+        """Retrieve extrinsic transformation between the viewpoints of two different streams.
+
+        Args:
+            from_stream (:class:`pyrealsense.constants.rs_stream`): from stream.
+            to_stream (:class:`pyrealsense.constants.rs_stream`): to stream.
+
+        Returns:
+            (:class:`pyrealsense.to_wrap.rs_extrinsics`): extrinsics parameters as a structure
+
+        """
         _rs_extrinsics = rs_extrinsics()
         lrs.rs_get_device_extrinsics(
             self.dev,

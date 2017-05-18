@@ -3,14 +3,15 @@ from .constants import rs_stream, rs_format
 
 class Stream(object):
     """Stream object that stores all necessary information for interaction with librealsense.
-    
-    :param string name: name of the stream
-    :param bool native: whether the stream is native or composite
-    :param string stream: from the parsed rs_stream
-    :param int width: name of the stream
-    :param int height: name of the stream
-    :param int format: from the parsed rs_format
-    :param int fps: name of the stream
+
+    Args:
+        name (str): name of stream which will be used to create a ``@property`` on :func:`pyrealsense.core.Device`.
+        native (bool): whether the stream is native or composite
+        stream (str): from the parsed rs_stream
+        width (int): name of the stream
+        height (int): name of the stream
+        format (int): from the parsed rs_format
+        fps (int): name of the stream
     """
     def __init__(self, name, native, stream, width, height, format, fps):
         super(Stream, self).__init__()
@@ -25,39 +26,31 @@ class Stream(object):
 class ColourStream(Stream):
     """Colour stream from device, with default parameters. See for possible combinations.
     """
-    def __init__(self, width=640, height=480, fps=30):
-        self.name = 'colour'
+    def __init__(self, name='color', width=640, height=480, fps=30):
         self.native = True
         self.stream = rs_stream.RS_STREAM_COLOR
         self.format = rs_format.RS_FORMAT_RGB8,
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
-
-        super(ColourStream, self).__init__(self.name, self.native, self.stream, width, height, self.format, fps)
+        super(ColourStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
 class DepthStream(Stream):
-    def __init__(self, name='depth',
-                       native=True,
-                       stream=rs_stream.RS_STREAM_DEPTH,
-                       width=640,
-                       height=480,
-                       format=rs_format.RS_FORMAT_Z16,
-                       fps=30):
-        super(DepthStream, self).__init__(name, native, stream, width, height, format, fps)
+    def __init__(self, name='depth', width=640, height=480, fps=30):
+        self.native = True
+        self.stream = rs_stream.RS_STREAM_DEPTH,
+        self.format=rs_format.RS_FORMAT_Z16,
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
+        super(DepthStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
 class PointStream(Stream):
-    def __init__(self, name='points',
-                       native=False,
-                       stream=rs_stream.RS_STREAM_POINTS,
-                       width=640,
-                       height=480,
-                       format=rs_format.RS_FORMAT_XYZ32F,
-                       fps=30):
-        super(PointStream, self).__init__(name, native, stream, width, height, format, fps)
+    def __init__(self, name='points', width=640, height=480, fps=30):
+        self.native = False,
+        self.stream = rs_stream.RS_STREAM_POINTS,
+        self.format = rs_format.RS_FORMAT_XYZ32F,
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_float
+        super(PointStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
 class CADStream(Stream):
     def __init__(self, name='cad',

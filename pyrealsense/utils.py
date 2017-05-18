@@ -7,7 +7,8 @@ import ctypes
 from .importlib import lrs
 
 class RealsenseError(Exception):
-    """Error thrown during the processing in case the processing chain needs to be exited."""
+    """Error thrown during the processing in case the processing chain needs to be exited. 
+    Will printout the error message as received from librealsense."""
     def __init__(self, function, args, message):
         self.function = function
         self.args = args
