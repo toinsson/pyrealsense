@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <Python.h>
 
 void _apply_depth_control_preset(rs_device * device, int preset)
 {
@@ -22,7 +23,7 @@ void _apply_ivcam_preset(rs_device * device, rs_ivcam_preset preset)
 float pixel[2];
 const void * project_point_to_pixel(const void * point, const rs_intrinsics * intrin)
 {
-    rs_project_point_to_pixel(pixel, intrin, point);
+    rs_project_point_to_pixel(pixel, intrin, (const float *)point);
     return pixel;
 }
 
@@ -30,7 +31,7 @@ const void * project_point_to_pixel(const void * point, const rs_intrinsics * in
 float point[3];
 const void * deproject_pixel_to_point(const void * pixel, const float depth, const rs_intrinsics * intrin)
 {
-    rs_deproject_pixel_to_point(point, intrin, pixel, depth);
+    rs_deproject_pixel_to_point(point, intrin, (const float *)pixel, depth);
     return point;
 }
 
@@ -64,4 +65,11 @@ const void * deproject_depth(const void * depth_image,
         }
     }
     return pointcloud;
+}
+
+// not used for anything since this isn't a real Python extension,
+// just keeps compiler happy on Windows
+PyMODINIT_FUNC initrsutilwrapper(void) 
+{
+
 }

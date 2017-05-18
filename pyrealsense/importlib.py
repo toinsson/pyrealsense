@@ -8,10 +8,12 @@ import sys
 import os
 
 os_name = sys.platform
-lrs_suffix_mapping = {'darwin':'.dylib', 'linux':'.so', 'linux2':'.so'} # 'win':'.dll'}
-rsu_suffix_mapping = {'darwin':'.so', 'linux':'.so', 'linux2':'.so'} # 'win':'.dll'}
+lrs_prefix_mapping = {'darwin': 'lib', 'linux': 'lib', 'linux2': 'lib', 'win32': ''}
+lrs_suffix_mapping = {'darwin': '.dylib', 'linux': '.so', 'linux2': '.so', 'win32': '.dll'}
+rsu_suffix_mapping = {'darwin': '.so', 'linux': '.so', 'linux2': '.so', 'win32': '.pyd'}
 
 try:
+    lrs_prefix = lrs_prefix_mapping[os_name]
     lrs_suffix = lrs_suffix_mapping[os_name]
     rsu_suffix = rsu_suffix_mapping[os_name]
 except KeyError:
@@ -36,7 +38,7 @@ except OSError:
 
 ## import C lib
 try:
-    lrs = ctypes.CDLL('librealsense'+lrs_suffix)
+    lrs = ctypes.CDLL(lrs_prefix+'realsense'+lrs_suffix)
 except OSError:
     import warnings
     warnings.warn("librealsense not found.")
