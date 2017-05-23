@@ -24,8 +24,9 @@ class Stream(object):
         self.height = height
         self.fps = fps
 
-class ColourStream(Stream):
-    """Colour stream from device, with default parameters.
+
+class ColorStream(Stream):
+    """Color stream from device, with default parameters.
     """
     def __init__(self, name='color', width=640, height=480, fps=30):
         self.native = True
@@ -33,7 +34,8 @@ class ColourStream(Stream):
         self.format = rs_format.RS_FORMAT_RGB8
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
-        super(ColourStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
+        super(ColorStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
+
 
 class DepthStream(Stream):
     """Depth stream from device, with default parameters.
@@ -46,6 +48,7 @@ class DepthStream(Stream):
         self.dtype = ctypes.c_uint16
         super(DepthStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
+
 class PointStream(Stream):
     """Point stream from device, with default parameters.
     """
@@ -56,6 +59,7 @@ class PointStream(Stream):
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_float
         super(PointStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
+
 
 class CADStream(Stream):
     """CAD stream from device, with default parameters.
@@ -68,6 +72,7 @@ class CADStream(Stream):
         self.dtype = ctypes.c_uint8
         super(CADStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
+
 class DACStream(Stream):
     """DAC stream from device, with default parameters.
     """
@@ -78,6 +83,7 @@ class DACStream(Stream):
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
         super(DACStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
+
 
 class InfraredStream(Stream):
     """Infrared stream from device, with default parameters.

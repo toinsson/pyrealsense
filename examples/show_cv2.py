@@ -25,8 +25,8 @@ while True:
         fps_smooth = (fps_smooth * smoothing) + (fps * (1.0-smoothing))
         last = now
 
-    dev.wait_for_frame()
-    c = dev.colour
+    dev.wait_for_frames()
+    c = dev.color
     c = cv2.cvtColor(c, cv2.COLOR_RGB2BGR)
     d = dev.depth * dev.depth_scale * 1000
     d = cv2.applyColorMap(d.astype(np.uint8), cv2.COLORMAP_RAINBOW)

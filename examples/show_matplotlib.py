@@ -6,6 +6,6 @@ import pyrealsense as pyrs
 
 with pyrs.Service():
     dev = pyrs.Device()
-    dev.wait_for_frame()
-    plt.imshow(dev.colour)
+    dev.wait_for_frames()
+    plt.imshow(dev.color)
     plt.show()
