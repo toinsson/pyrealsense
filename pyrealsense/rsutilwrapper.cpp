@@ -4,7 +4,12 @@
 
 #include <stdio.h>
 #include <string.h>
+
+// #ifdef WIN_PYTHON_2
+// #include "stdint.h"
+// #else
 #include <stdint.h>
+// #endif
 
 #include <Python.h>
 

@@ -49,8 +49,8 @@ class VTKActorWrapper(object):
         while (update_on.is_set()):
             time.sleep(0.01)
             threadLock.acquire()
-            cam.wait_for_frame()
-            self.nparray[:] = cam.pointcloud.reshape(-1,3)
+            cam.wait_for_frames()
+            self.nparray[:] = cam.points.reshape(-1,3)
             self.pd.Modified()
             threadLock.release()
 
@@ -97,8 +97,8 @@ def main():
 
     threadLock = threading.Lock()
 
-    cam.wait_for_frame()
-    pc = cam.pointcloud.reshape(-1,3)
+    cam.wait_for_frames()
+    pc = cam.points.reshape(-1,3)
     actorWrapper = VTKActorWrapper(pc)
     actorWrapper.update(threadLock, update_on)
 

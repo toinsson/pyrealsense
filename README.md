@@ -1,49 +1,58 @@
 # PyRealsense
 
-Simple [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library for Linux and Mac OS.
+Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
 
 
-## Dependencies
+## Prerequisites
 
-The library depends on [pycparser](https://github.com/eliben/pycparser) for parsing the librealsense h files and extracting necessary enums and structures definitions. [Numpy](http://www.numpy.org/) is used for generic data shuffling.
+- librealsense [installation](https://github.com/IntelRealSense/librealsense#installation-guide): Make sure you have the library installed and working by running the examples.
+
+- windows specifics: set PYRS_INCLUDES to `rs.h` directory location and PYRS_LIBS to the library binary location. You will also need to have `stdint.h` available in your path.
+
+- dependencies: pyrealsense depends on [pycparser](https://github.com/eliben/pycparser) for parsing the librealsense h files and extracting necessary enums and structures definitions and [Numpy](http://www.numpy.org/) for generic data shuffling.
 
 
 ## Installation
-from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.4):
+
+from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.5):
 
     pip install pyrealsense
 
 from source:
 
-    pip install pycparser numpy
     python setup.py install
 
 
 ## Online Usage
 
-    ## setup logging
-    import logging
-    logging.basicConfig(level = logging.INFO)
+```
+## setup logging
+import logging
+logging.basicConfig(level = logging.INFO)
 
-    ## import the package
-    import pyrealsense as pyrs
+## import the package
+import pyrealsense as pyrs
 
-    ## start the service
-    pyrs.start()
+## start the service - also available as context manager
+pyrs.start()
 
-    ## create a device from device id and streams of interest
-    cam = pyrs.Device(device_id = 0, streams = [pyrs.ColourStream(fps = 60)])
+## create a device from device id and streams of interest
+cam = pyrs.Device(device_id = 0, streams = [pyrs.ColorStream(fps = 60)])
 
-    ## wait for data and retrieve numpy array for ~1 second
-    for i in range(60):
-        cam.wait_for_frame()
-        print(cam.colour)
+## wait for data and retrieve numpy array for ~1 second
+for i in range(60):
+    cam.wait_for_frame()
+    print(cam.color)
 
-The server for Realsense devices is started with `pyrs.start()` which will printout the number of devices available.
+## stop the service
+pyrs.stop()
+```
 
-Different devices can be created from the `Device` factory. They are created as their own class defined by device id, name, serial, firmware, as well as streams passed and camera presets. The default behaviour create a device with `id = 0` and setup the colour, depth, pointcloud and colour_aligned_depth streams.
+The server for Realsense devices is started with `pyrs.start()` which will printout the number of devices available. It can also be started as a context with `with pyrs.Service():`.
 
-The available streams are either native or synthetic, and each one will create a property that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is colour, depth, points, cad or dac. To get access to new data, `Device.wait_for_frame` has to be called once per frame.
+Different devices can be created from the `Device` factory. They are created as their own class defined by device id, name, serial, firmware, as well as streams passed and camera presets. The default behaviour create a device with `id = 0` and setup the color, depth, pointcloud, color_aligned_depth, depth_aligned_color and infrared streams.
+
+The available streams are either native or synthetic, and each one will create a property that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is color, depth, points, cad, dac or infrared. To get access to new data, `Device.wait_for_frames` has to be called once per frame.
 
 
 ## Offline Usage

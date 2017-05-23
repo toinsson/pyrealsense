@@ -23,6 +23,14 @@ if 'PYRS_LIBS' in environ:
     lib_dirs.append(environ['PYRS_LIBS'])
 
 
+# ## windows 
+# import sys
+# os_name = sys.platform
+# DFLAG = []
+# if os_name == 'win32':
+#     DFLAG_ = '-DWIN_PYTHON_3=1' if sys.version_info >= (3, 0) else '-DWIN_PYTHON_2=1'
+#     DFLAG.append(DFLAG_)
+
 ## dont build extension if on RTD
 import os
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
@@ -33,7 +41,9 @@ else:
                     sources=['pyrealsense/rsutilwrapper.cpp'],
                     libraries=['realsense'],
                     include_dirs=inc_dirs,
-                    library_dirs=lib_dirs, )]
+                    library_dirs=lib_dirs, 
+                    # compile_args=DFLAG,
+                    )]
 
 
 setup(name='pyrealsense',
