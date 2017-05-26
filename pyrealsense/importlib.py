@@ -29,12 +29,12 @@ def _find_extension_name():
     return os.path.join(dirname, f_name)
 
 ## prevent crash for Sphinx when extension is not compiled before hand
-try:
-    rsutilwrapper = ctypes.CDLL(_find_extension_name())
-except OSError:
-    import warnings
-    warnings.warn("rsutilwrapper not found.")
-    rsutilwrapper = None
+# try:
+#     rsutilwrapper = ctypes.CDLL(_find_extension_name())
+# except OSError:
+#     import warnings
+#     warnings.warn("rsutilwrapper not found.")
+#     rsutilwrapper = None
 
 ## import C lib
 try:

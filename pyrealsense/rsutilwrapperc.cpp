@@ -1,17 +1,7 @@
 #include "rs.h"
 #include "rsutil.h"
-#include "assert.h"
-
-#include <stdio.h>
-#include <string.h>
-
-// #ifdef WIN_PYTHON_2
-// #include "stdint.h"
-// #else
-#include <stdint.h>
-// #endif
-
-#include <Python.h>
+// #include "assert.h"
+// #include "rsutilwrapper.h"
 
 void _apply_depth_control_preset(rs_device * device, int preset)
 {
@@ -23,6 +13,20 @@ void _apply_ivcam_preset(rs_device * device, rs_ivcam_preset preset)
 {
     rs_apply_ivcam_preset(device, preset);
 }
+
+// #include <stdio.h>
+
+int fc( int N, const double a[], const double b[], double z[] )
+{
+    // printf( "fc: N=%d a[0]=%f b[0]=%f \n", N, a[0], b[0] );
+    for( int j = 0;  j < N;  j ++ ){
+        z[j] = a[j] + b[j];
+    }
+    return N;
+}
+
+// #include <stdio.h>
+#include <string.h>
 
 
 float pixel[2];
@@ -41,9 +45,7 @@ const void * deproject_pixel_to_point(const void * pixel, const float depth, con
 }
 
 
-// local memory space for pointcloud - max size
 float pointcloud[480*640*3];
-
 const void * deproject_depth(const void * depth_image,
                             const rs_intrinsics * depth_intrin,
                             const float * depth_scale)
@@ -72,9 +74,3 @@ const void * deproject_depth(const void * depth_image,
     return pointcloud;
 }
 
-// not used for anything since this isn't a real Python extension,
-// just keeps compiler happy on Windows
-PyMODINIT_FUNC initrsutilwrapper(void) 
-{
-
-}

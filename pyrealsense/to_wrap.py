@@ -58,19 +58,10 @@ class rs_error(ctypes.Structure):  # ERROR handling
 
 class rs_context(ctypes.Structure):
     """This is a placeholder for the context. It is only defined to hold a reference to a void pointer.
-
-    The `_fields_` class variable is defined as follows:
-
-    * :attr:`body` (c_float): whatever
     """
-    _fields_ = [("body", ctypes.c_float)]
-
+    pass
 
 class rs_device(ctypes.Structure):
     """This is a placeholder for the context. It is only defined to hold a reference to a void pointer.
-    
-    The `_fields_` class variable is defined as follows:
-
-    * :attr:`body` (c_float): whatever
     """
-    _fields_ = [("body", ctypes.c_float)]
+    pass

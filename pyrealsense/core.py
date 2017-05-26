@@ -9,7 +9,8 @@ from .constants import RS_API_VERSION, rs_stream, rs_format
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
-from .importlib import rsutilwrapper, lrs
+from .importlib import lrs
+
 
 # Global variables
 e = ctypes.POINTER(rs_error)()
@@ -46,6 +47,7 @@ class Service(object):
     def __enter__(self):
         start()
     def __exit__(self, *args):
+        print 'stopping the service'
         stop()
 
 
@@ -72,10 +74,13 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
     lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
     dev = lrs.rs_get_device(ctx, device_id, ctypes.byref(e))
     _check_error(e)
+
     name = pp(lrs.rs_get_device_name, dev, ctypes.byref(e))
     _check_error(e)
+
     serial = pp(lrs.rs_get_device_serial, dev, ctypes.byref(e))
     _check_error(e)
+
     version = pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))
     _check_error(e)
 
@@ -105,7 +110,7 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
 
     ## ivcam preset
     if ivcam_preset:
-        rsutilwrapper._apply_ivcam_preset(dev, ivcam_preset)
+        rsutilwrapper.apply_ivcam_preset(dev, ivcam_preset)
 
     ## add stream property and intrinsics
     for s in streams:
@@ -168,7 +173,11 @@ class DeviceBase(object):
     def get_frame_timestamp(self, stream):
         """Retrieve the time at which the latest frame on a specific stream was captured.
 
-        :param int stream: stream id
+        Args:
+            stream (int): stream id
+
+        Returns:
+            (long): timestamp
         """
         lrs.rs_get_frame_timestamp.restype = ctypes.c_double
         return lrs.rs_get_frame_timestamp(self.dev, stream, ctypes.byref(e))
