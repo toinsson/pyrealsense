@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+# from setuptools import setup, Extension
 from setuptools import find_packages
 from os import path, environ
 import io
@@ -31,19 +31,30 @@ if 'PYRS_LIBS' in environ:
 #     DFLAG_ = '-DWIN_PYTHON_3=1' if sys.version_info >= (3, 0) else '-DWIN_PYTHON_2=1'
 #     DFLAG.append(DFLAG_)
 
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Build import cythonize
+
+from Cython.Build import cythonize
+
 ## dont build extension if on RTD
 import os
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     module = []
 else:
-    module = [Extension('pyrealsense.rsutilwrapper',
-                    sources=['pyrealsense/rsutilwrapper.cpp'],
+    module = cythonize([Extension(
+            name='pyrealsense.rsutilwrapper',
+            # name="f",
+            sources=["pyrealsense/rsutilwrapper.pyx", "pyrealsense/rsutilwrapperc.cpp"],
+                    # sources=['pyrealsense/rsutilwrapper.pyx'],
                     libraries=['realsense'],
                     include_dirs=inc_dirs,
                     library_dirs=lib_dirs, 
                     # compile_args=DFLAG,
-                    )]
+            language="c++",
+                    )])
+
 
 
 setup(name='pyrealsense',
