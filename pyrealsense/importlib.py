@@ -6,6 +6,7 @@
 import ctypes
 import sys
 import os
+import warnings
 
 os_name = sys.platform
 lrs_prefix_mapping = {'darwin': 'lib', 'linux': 'lib', 'linux2': 'lib', 'win32': ''}
@@ -22,13 +23,12 @@ except KeyError:
 try:
     lrs = ctypes.CDLL(lrs_prefix+'realsense'+lrs_suffix)
 except OSError:
-    import warnings
     warnings.warn("librealsense not found.")
     lrs = None
 
 ## try import since docs will crash here
 try:
-    from . import rsutilwrapper
+    import rsutilwrapper
 except ImportError:
     warnings.warn("rsutilwrapper not found.")
     rsutilwrapper = None
