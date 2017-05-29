@@ -23,18 +23,8 @@ if 'PYRS_LIBS' in environ:
     lib_dirs.append(environ['PYRS_LIBS'])
 
 
-# ## windows 
-# import sys
-# os_name = sys.platform
-# DFLAG = []
-# if os_name == 'win32':
-#     DFLAG_ = '-DWIN_PYTHON_3=1' if sys.version_info >= (3, 0) else '-DWIN_PYTHON_2=1'
-#     DFLAG.append(DFLAG_)
-
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Build import cythonize
-
 from Cython.Build import cythonize
 
 ## dont build extension if on RTD
@@ -43,17 +33,15 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     module = []
 else:
-    module = cythonize([Extension(
+    module = cythonize(
+        [Extension(
             name='pyrealsense.rsutilwrapper',
-            # name="f",
             sources=["pyrealsense/rsutilwrapper.pyx", "pyrealsense/rsutilwrapperc.cpp"],
-                    # sources=['pyrealsense/rsutilwrapper.pyx'],
-                    libraries=['realsense'],
-                    include_dirs=inc_dirs,
-                    library_dirs=lib_dirs, 
-                    # compile_args=DFLAG,
-            language="c++",
-                    )])
+            libraries=['realsense'],
+            include_dirs=inc_dirs,
+            library_dirs=lib_dirs, 
+            language="c++",)
+        ])
 
 
 

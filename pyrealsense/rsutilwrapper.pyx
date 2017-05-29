@@ -17,13 +17,31 @@ cdef extern from "rs.h":
 
 cdef extern from "rsutilwrapper.h":
     int fc( int N, double* a, double* b, double* z )  # z = a + b
+
     void _apply_depth_control_preset(rs_device* device, int preset)
     void _apply_ivcam_preset(rs_device* device, rs_ivcam_preset preset)
+    void _project_point_to_pixel(float* pixel, const rs_intrinsics * intrin, const float* point)
+    void _deproject_pixel_to_point(float* point, const rs_intrinsics * intrin, const float* pixel, float depth)
 
 
-import cython
+from libc.stdint cimport uintptr_t
 
-def test_
+def apply_depth_control_preset(device, preset):
+    cdef uintptr_t adr = <uintptr_t>ctypes.addressof(device.contents)
+    _apply_ivcam_preset(<rs_device*>adr, preset)
+
+def apply_ivcam_preset(device, preset):
+    cdef uintptr_t adr = <uintptr_t>ctypes.addressof(device.contents)
+    _apply_ivcam_preset(<rs_device*>adr, <rs_ivcam_preset>preset)
+
+def project_point_to_pixel(np.ndarray pixel, intrin, np.ndarray point):
+    cdef uintptr_t adr = <uintptr_t>ctypes.addressof(intrin)
+    _project_point_to_pixel(<float*> pixel.data, <rs_intrinsics*>adr, <float*> point.data)
+
+def deproject_pixel_to_point(np.ndarray point, intrin, np.ndarray pixel, depth):
+    cdef uintptr_t adr = <uintptr_t>ctypes.addressof(intrin)
+    _deproject_pixel_to_point(<float*> point.data, <rs_intrinsics*>adr, <float*> pixel.data, depth)
+
 
 def fpy( N,
     np.ndarray[np.double_t,ndim=1] A,
@@ -40,12 +58,6 @@ def translate_by_value(rs_intrinsics_py, depth):
     cdef rs_intrinsics rs_intrinsics_cy
     rs_intrinsics_cy.width = rs_intrinsics_py.width
     print rs_intrinsics_cy.width
-
-
-cpdef apply_ivcam_preset(device, preset):
-    cdef long adr = <long>ctypes.addressof(device.contents)
-    _apply_ivcam_preset(<rs_device*>adr, <rs_ivcam_preset>preset)
-
 
 # import ctypes
 # cpdef test(rs_device_ct, depth):
