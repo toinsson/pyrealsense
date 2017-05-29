@@ -10,31 +10,13 @@ import os
 os_name = sys.platform
 lrs_prefix_mapping = {'darwin': 'lib', 'linux': 'lib', 'linux2': 'lib', 'win32': ''}
 lrs_suffix_mapping = {'darwin': '.dylib', 'linux': '.so', 'linux2': '.so', 'win32': '.dll'}
-rsu_suffix_mapping = {'darwin': '.so', 'linux': '.so', 'linux2': '.so', 'win32': '.pyd'}
 
 try:
     lrs_prefix = lrs_prefix_mapping[os_name]
     lrs_suffix = lrs_suffix_mapping[os_name]
-    rsu_suffix = rsu_suffix_mapping[os_name]
 except KeyError:
     raise OSError('OS not supported.')
 
-## hacky way to load "extension" module
-def _find_extension_name():
-    dirname = os.path.dirname(__file__)
-    f_name = ''
-    for f in os.listdir(dirname):
-        if f.endswith(rsu_suffix):
-            f_name = f
-    return os.path.join(dirname, f_name)
-
-## prevent crash for Sphinx when extension is not compiled before hand
-# try:
-#     rsutilwrapper = ctypes.CDLL(_find_extension_name())
-# except OSError:
-#     import warnings
-#     warnings.warn("rsutilwrapper not found.")
-#     rsutilwrapper = None
 
 ## import C lib
 try:
@@ -44,3 +26,9 @@ except OSError:
     warnings.warn("librealsense not found.")
     lrs = None
 
+## try import since docs will crash here
+try:
+    from . import rsutilwrapper
+except ImportError:
+    warnings.warn("rsutilwrapper not found.")
+    rsutilwrapper = None

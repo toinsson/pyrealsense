@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 import ctypes
+import numpy as np
 from numpy.ctypeslib import ndpointer
 import warnings
 
@@ -12,14 +13,8 @@ from .constants import RS_API_VERSION, rs_stream, rs_format
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
-from .importlib import lrs
+from .importlib import lrs, rsutilwrapper
 
-## try import since docs will crash here
-try:
-    from . import rsutilwrapper
-except ImportError:
-    warnings.warn("rsutilwrapper not found.")
-    rsutilwrapper = None
 
 # Global variables
 e = ctypes.POINTER(rs_error)()
@@ -115,7 +110,7 @@ def Device(device_id=0, streams=None, depth_control_preset=None, ivcam_preset=No
 
     ## depth control preset
     if depth_control_preset:
-        rsutilwrapper._apply_depth_control_preset(dev, depth_control_preset)
+        rsutilwrapper.apply_depth_control_preset(dev, depth_control_preset)
 
     ## ivcam preset
     if ivcam_preset:
@@ -150,6 +145,13 @@ class DeviceBase(object):
         self.serial = serial
         self.version = version
         self.streams = streams
+
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        # print 'stopping the service'
+        self.stop()
+
 
     def stop(self):
         """End data acquisition.
@@ -265,7 +267,7 @@ class DeviceBase(object):
         return lrs.rs_get_device_depth_scale(self.dev, ctypes.byref(e))
 
     def _get_pointcloud(self):
-        ds = [s for s in dev.streams if type(s) is pyrs.stream.DepthStream][0]
+        ds = [s for s in self.streams if type(s) is DepthStream][0]
 
         lrs.rs_get_frame_data.restype = ndpointer(dtype=ctypes.c_uint16, shape=(ds.height,ds.width))
         depth = lrs.rs_get_frame_data(self.dev, rs_stream.RS_STREAM_DEPTH, ctypes.byref(e))
@@ -275,14 +277,8 @@ class DeviceBase(object):
         ## ugly fix for outliers
         depth[0,:2] = 0
 
-
-        # rsutilwrapper.deproject_depth()
-        # rsutilwrapper.deproject_depth.restype = ndpointer(dtype=ctypes.c_float, shape=(480,640,3))
-
-        # return rsutilwrapper.deproject_depth(
-        #     ctypes.c_void_p(depth.ctypes.data),
-        #     ctypes.byref(self.depth_intrinsics),
-        #     ctypes.byref(ctypes.c_float(self.depth_scale)))
+        rsutilwrapper.deproject_depth(pointcloud, self.depth_intrinsics, depth, self.depth_scale)
+        return pointcloud.reshape((ds.height, ds.width, 3))
 
     def project_point_to_pixel(self, point):
         """Project a 3d point to its 2d pixel coordinate by calling rsutil's 
@@ -295,7 +291,7 @@ class DeviceBase(object):
             pixel (np.array): (x,y) coordinate of the pixel
         """
         pixel = np.ones(2, dtype=np.float32) * np.NaN
-        rsutilwrapper.project_point_to_pixel(pixel, dev.depth_intrinsics, point)
+        rsutilwrapper.project_point_to_pixel(pixel, self.depth_intrinsics, point)
         return pixel
 
     def deproject_pixel_to_point(self, pixel, depth):
@@ -310,6 +306,6 @@ class DeviceBase(object):
             point (np.array): (x,y,z) coordinate of the point
         """
         point = np.ones(3, dtype=np.float32) * np.NaN
-        rsutilwrapper.deproject_pixel_to_point(point, dev.depth_intrinsics, pixel, depth)
+        rsutilwrapper.deproject_pixel_to_point(point, self.depth_intrinsics, pixel, depth)
         return point
 
