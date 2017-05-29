@@ -149,7 +149,6 @@ class DeviceBase(object):
     def __enter__(self):
         return self
     def __exit__(self, *args):
-        # print 'stopping the service'
         self.stop()
 
 
@@ -279,6 +278,10 @@ class DeviceBase(object):
 
         rsutilwrapper.deproject_depth(pointcloud, self.depth_intrinsics, depth, self.depth_scale)
         return pointcloud.reshape((ds.height, ds.width, 3))
+
+    def apply_ivcam_preset(self, preset):
+        """Provide access to several recommend sets of option presets for ivcam."""
+        rsutilwrapper.apply_ivcam_preset(self.dev, preset)
 
     def project_point_to_pixel(self, point):
         """Project a 3d point to its 2d pixel coordinate by calling rsutil's 
