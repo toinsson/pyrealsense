@@ -60,11 +60,8 @@ def deproject_depth(depth):
 
     width = depth_intrinsics.width
     height = depth_intrinsics.height
+    pointcloud = np.zeros((height * width * 3), dtype=np.float32)
 
-    rsutilwrapper.deproject_depth.restype = ndpointer(dtype=ctypes.c_float, shape=(height,width,3))
-
-    return rsutilwrapper.deproject_depth(
-        ctypes.c_void_p(depth.ctypes.data),
-        ctypes.byref(depth_intrinsics),
-        ctypes.byref(ctypes.c_float(depth_scale)))
+    rsutilwrapper.deproject_depth(pointcloud, depth_intrinsics, depth, depth_scale)
+    return pointcloud.reshape((ds.height, ds.width, 3))
 

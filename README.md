@@ -1,20 +1,20 @@
 # PyRealsense
 
-Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html) extension to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
+Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](http://cython.org/) wrapper to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
 
 
 ## Prerequisites
 
-- librealsense [installation](https://github.com/IntelRealSense/librealsense#installation-guide): Make sure you have the library installed and working by running the examples.
+- librealsense [installation](https://github.com/IntelRealSense/librealsense#installation-guide): make sure you have the library installed and working by running the examples.
 
-- windows specifics: set PYRS_INCLUDES to `rs.h` directory location and PYRS_LIBS to the library binary location. You will also need to have `stdint.h` available in your path.
+- windows specifics: set PYRS_INCLUDES to `rs.h` directory location and PYRS_LIBS to the librealsense binary location. You will also need to have `stdint.h` available in your path (which could be dropped into PYRS_INCLUDES for example).
 
-- dependencies: pyrealsense depends on [pycparser](https://github.com/eliben/pycparser) for parsing the librealsense h files and extracting necessary enums and structures definitions and [Numpy](http://www.numpy.org/) for generic data shuffling.
+- dependencies: pyrealsense uses [pycparser](https://github.com/eliben/pycparser) for extracting necessary enums and structures definitions from the librealsense API, [Cython](http://cython.org/) for wrapping the inlined functions in the librealsense API, and [Numpy](http://www.numpy.org/) for generic data shuffling.
 
 
 ## Installation
 
-from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.5):
+from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.4) - (OBS: not always the latest):
 
     pip install pyrealsense
 
@@ -41,10 +41,11 @@ cam = pyrs.Device(device_id = 0, streams = [pyrs.ColorStream(fps = 60)])
 
 ## wait for data and retrieve numpy array for ~1 second
 for i in range(60):
-    cam.wait_for_frame()
+    cam.wait_for_frames()
     print(cam.color)
 
-## stop the service
+## stop camera and service
+cam.stop()
 pyrs.stop()
 ```
 
@@ -75,7 +76,10 @@ The module `offline` allows storing the rs_intrinsics and depth_scale of a devic
 
 ## Examples
 
-The examples are split based on the visualisation technology they require. One shows a still image with [matplotlib](http://matplotlib.org/), another one streams depth and color data with [opencv](http://opencv.org/), and the last one displays a live feed of the pointcloud with [VTK](http://www.vtk.org/).
+There are 3 examples using different visualisation technology:
+- still color with [matplotlib](http://matplotlib.org/)
+- color and depth stream with [opencv](http://opencv.org/)
+- pointcloud stream with [VTK](http://www.vtk.org/)
 
 
 ## Caveats
@@ -96,5 +100,10 @@ Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/p
 
 ## Possible Pull Requests
 
-- support for Windows
+The following will be very welcome:
+- any improvment in the documentation
+- more functionality from `rs.h`
+- more example, for example with Qt
 - support for several cameras in offline module
+
+Make sure to push to the `dev` branch.

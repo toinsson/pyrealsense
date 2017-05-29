@@ -1,24 +1,37 @@
 PyRealsense
 ===========
 
-Simple `ctypes <https://docs.python.org/2/library/ctypes.html>`__
-extension to the
+Cross-platform
+`ctypes <https://docs.python.org/2/library/ctypes.html>`__/`Cython <http://cython.org/>`__
+wrapper to the
 `librealsense <https://github.com/IntelRealSense/librealsense>`__
-library for Linux and Mac OS.
+library.
 
-Dependencies
-------------
+Prerequisites
+-------------
 
-The library depends on
-`pycparser <https://github.com/eliben/pycparser>`__ for parsing the
-librealsense h files and extracting necessary enums and structures
-definitions. `Numpy <http://www.numpy.org/>`__ is used for generic data
-shuffling.
+-  librealsense
+   `installation <https://github.com/IntelRealSense/librealsense#installation-guide>`__:
+   make sure you have the library installed and working by running the
+   examples.
+
+-  windows specifics: set PYRS\_INCLUDES to ``rs.h`` directory location
+   and PYRS\_LIBS to the librealsense binary location. You will also
+   need to have ``stdint.h`` available in your path (which could be
+   dropped into PYRS\_INCLUDES for example).
+
+-  dependencies: pyrealsense uses
+   `pycparser <https://github.com/eliben/pycparser>`__ for extracting
+   necessary enums and structures definitions from the librealsense API,
+   `Cython <http://cython.org/>`__ for wrapping the inlined functions in
+   the librealsense API, and `Numpy <http://www.numpy.org/>`__ for
+   generic data shuffling.
 
 Installation
 ------------
 
-from `PyPI <https://pypi.python.org/pypi/pyrealsense/1.4>`__:
+from `PyPI <https://pypi.python.org/pypi/pyrealsense/1.4>`__ - (OBS: not
+always the latest):
 
 ::
 
@@ -28,7 +41,6 @@ from source:
 
 ::
 
-    pip install pycparser numpy
     python setup.py install
 
 Online Usage
@@ -43,31 +55,36 @@ Online Usage
     ## import the package
     import pyrealsense as pyrs
 
-    ## start the service
+    ## start the service - also available as context manager
     pyrs.start()
 
     ## create a device from device id and streams of interest
-    cam = pyrs.Device(device_id = 0, streams = [pyrs.ColourStream(fps = 60)])
+    cam = pyrs.Device(device_id = 0, streams = [pyrs.ColorStream(fps = 60)])
 
     ## wait for data and retrieve numpy array for ~1 second
     for i in range(60):
-        cam.wait_for_frame()
-        print(cam.colour)
+        cam.wait_for_frames()
+        print(cam.color)
+
+    ## stop camera and service
+    cam.stop()
+    pyrs.stop()
 
 The server for Realsense devices is started with ``pyrs.start()`` which
-will printout the number of devices available.
+will printout the number of devices available. It can also be started as
+a context with ``with pyrs.Service():``.
 
 Different devices can be created from the ``Device`` factory. They are
 created as their own class defined by device id, name, serial, firmware,
 as well as streams passed and camera presets. The default behaviour
-create a device with ``id = 0`` and setup the colour, depth, pointcloud
-and colour\_aligned\_depth streams.
+create a device with ``id = 0`` and setup the color, depth, pointcloud,
+color\_aligned\_depth, depth\_aligned\_color and infrared streams.
 
 The available streams are either native or synthetic, and each one will
 create a property that exposes the current content of the frame buffer
 in the form of ``device.<stream_name>``, where ``<stream_name>`` is
-colour, depth, points, cad or dac. To get access to new data,
-``Device.wait_for_frame`` has to be called once per frame.
+color, depth, points, cad, dac or infrared. To get access to new data,
+``Device.wait_for_frames`` has to be called once per frame.
 
 Offline Usage
 -------------
@@ -95,12 +112,10 @@ file and save some disk memory.
 Examples
 --------
 
-The examples are split based on the visualisation technology they
-require. One shows a still image with
-`matplotlib <http://matplotlib.org/>`__, another one streams depth and
-color data with `opencv <http://opencv.org/>`__, and the last one
-displays a live feed of the pointcloud with
-`VTK <http://www.vtk.org/>`__.
+There are 3 examples using different visualisation technology: - still
+color with `matplotlib <http://matplotlib.org/>`__ - color and depth
+stream with `opencv <http://opencv.org/>`__ - pointcloud stream with
+`VTK <http://www.vtk.org/>`__
 
 Caveats
 -------
@@ -122,8 +137,11 @@ Ubuntu Trusty, python 2 and 3: |Build Status|
 Possible Pull Requests
 ----------------------
 
--  support for Windows
--  support for several cameras in offline module
+The following will be very welcome: - any improvment in the
+documentation - more functionality from ``rs.h`` - more example, for
+example with Qt - support for several cameras in offline module
+
+Make sure to push to the ``dev`` branch.
 
 .. |Build Status| image:: https://travis-ci.org/toinsson/pyrealsense.svg?branch=master
    :target: https://travis-ci.org/toinsson/pyrealsense
