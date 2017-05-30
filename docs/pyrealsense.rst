@@ -1,4 +1,4 @@
-pyrealsense package
+Pyrealsense package
 ===================
 
 Module contents
@@ -33,15 +33,15 @@ pyrealsense.offline module
     :undoc-members:
     :show-inheritance:
 
-pyrealsense.importlib module
+pyrealsense.extlib module
+-------------------------
+
+.. automodule:: pyrealsense.extlib
+
+pyrealsense.extstruct module
 ----------------------------
 
-.. automodule:: pyrealsense.importlib
-
-pyrealsense.to_wrap module
---------------------------
-
-.. automodule:: pyrealsense.to_wrap
+.. automodule:: pyrealsense.extstruct
     :members:
     :show-inheritance:
 

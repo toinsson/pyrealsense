@@ -1,5 +1,5 @@
-PyRealsense
-===========
+Readme
+======
 
 Cross-platform
 `ctypes <https://docs.python.org/2/library/ctypes.html>`__/`Cython <http://cython.org/>`__
@@ -10,22 +10,21 @@ library.
 Prerequisites
 -------------
 
--  librealsense
-   `installation <https://github.com/IntelRealSense/librealsense#installation-guide>`__:
-   make sure you have the library installed and working by running the
-   examples.
+-  install [librealsense]
+   (https://github.com/IntelRealSense/librealsense#installation-guide)
+   and run the examples.
 
--  windows specifics: set PYRS\_INCLUDES to ``rs.h`` directory location
-   and PYRS\_LIBS to the librealsense binary location. You will also
-   need to have ``stdint.h`` available in your path (which could be
-   dropped into PYRS\_INCLUDES for example).
-
--  dependencies: pyrealsense uses
+-  install the dependencies: pyrealsense uses
    `pycparser <https://github.com/eliben/pycparser>`__ for extracting
    necessary enums and structures definitions from the librealsense API,
    `Cython <http://cython.org/>`__ for wrapping the inlined functions in
    the librealsense API, and `Numpy <http://www.numpy.org/>`__ for
    generic data shuffling.
+
+-  Windows specifics: set environment variable PYRS\_INCLUDES to the
+   ``rs.h`` directory location and environment variable PYRS\_LIBS to
+   the librealsense binary location. You might also need to have
+   ``stdint.h`` available in your path.
 
 Installation
 ------------
@@ -61,8 +60,8 @@ Online Usage
     ## create a device from device id and streams of interest
     cam = pyrs.Device(device_id = 0, streams = [pyrs.ColorStream(fps = 60)])
 
-    ## wait for data and retrieve numpy array for ~1 second
-    for i in range(60):
+    ## retrieve 60 frames of data
+    for _ in range(60):
         cam.wait_for_frames()
         print(cam.color)
 
@@ -75,8 +74,8 @@ will printout the number of devices available. It can also be started as
 a context with ``with pyrs.Service():``.
 
 Different devices can be created from the ``Device`` factory. They are
-created as their own class defined by device id, name, serial, firmware,
-as well as streams passed and camera presets. The default behaviour
+created as their own class defined by device id, name, serial, firmware
+as well as enabled streams and camera presets. The default behaviour
 create a device with ``id = 0`` and setup the color, depth, pointcloud,
 color\_aligned\_depth, depth\_aligned\_color and infrared streams.
 
@@ -103,16 +102,16 @@ Offline Usage
     d = np.linspace(0, 1000, 480*640, dtype=np.uint16)
     pc = offline.deproject_depth(d)
 
-The module ``offline`` allows storing the rs\_intrinsics and
-depth\_scale of a device to disk, by default in the home directory in
-the file ``.pyrealsense``. This can later be loaded and used to
-deproject depth data into pointcloud, which is useful to store raw video
-file and save some disk memory.
+The module ``offline`` can store the rs\_intrinsics and depth\_scale of
+a device to disk by default in the user's home directory in the file
+``.pyrealsense``. This can later be loaded and used to deproject depth
+data into pointcloud, which is useful to store raw video file and save
+some disk memory.
 
 Examples
 --------
 
-There are 3 examples using different visualisation technology: - still
+There are 3 examples using different visualisation technologies: - still
 color with `matplotlib <http://matplotlib.org/>`__ - color and depth
 stream with `opencv <http://opencv.org/>`__ - pointcloud stream with
 `VTK <http://www.vtk.org/>`__
@@ -137,9 +136,11 @@ Ubuntu Trusty, python 2 and 3: |Build Status|
 Possible Pull Requests
 ----------------------
 
-The following will be very welcome: - any improvment in the
-documentation - more functionality from ``rs.h`` - more example, for
-example with Qt - support for several cameras in offline module
+-  improvments to the documentation
+-  more functionality from ``rs.h``
+-  boiler plate code (Qt example?)
+-  support for several cameras in offline module
+-  continuous integration for Windows and MacOs
 
 Make sure to push to the ``dev`` branch.
 

@@ -11,9 +11,9 @@ import warnings
 
 from .constants import RS_API_VERSION, rs_stream, rs_format
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
-from .to_wrap import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
+from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error
-from .importlib import lrs, rsutilwrapper
+from .extlib import lrs, rsutilwrapper
 
 
 # Global variables
@@ -154,6 +154,8 @@ class DeviceBase(object):
 
     def stop(self):
         """End data acquisition.
+        Raises: 
+            :class:`utils.RealsenseError`: in case librealsense reports a problem.
         """
         lrs.rs_stop_device(self.dev, ctypes.byref(e))
         _check_error(e)
@@ -212,7 +214,7 @@ class DeviceBase(object):
             to_stream (:class:`pyrealsense.constants.rs_stream`): to stream.
 
         Returns:
-            (:class:`pyrealsense.to_wrap.rs_extrinsics`): extrinsics parameters as a structure
+            (:class:`pyrealsense.extstruct.rs_extrinsics`): extrinsics parameters as a structure
 
         """
         _rs_extrinsics = rs_extrinsics()
@@ -226,13 +228,27 @@ class DeviceBase(object):
         return _rs_extrinsics
 
     def get_device_option(self, option):
-        """Get device option."""
+        """Get device option.
+
+        Args:
+            option (int): taken from :class:`pyrealsense.constants.rs_option`.
+
+        Returns:
+            (double): option value.
+        """
         lrs.rs_get_device_option.restype = ctypes.c_double
         return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
 
     def get_device_option_description(self, option):
-        """Get the device option description."""
-        return pp(lrs.rs_get_device_option_description, 
+        """Get the device option description.
+
+        Args:
+            option (int): taken from :class:`pyrealsense.constants.rs_option`.
+
+        Returns:
+            (str): option value.
+        """
+        return pp(lrs.rs_get_device_option_description,
             self.dev, ctypes.c_uint(option), ctypes.byref(e))
 
     def set_device_option(self, option, value):
@@ -280,7 +296,12 @@ class DeviceBase(object):
         return pointcloud.reshape((ds.height, ds.width, 3))
 
     def apply_ivcam_preset(self, preset):
-        """Provide access to several recommend sets of option presets for ivcam."""
+        """Provide access to several recommend sets of option presets for ivcam.
+
+        Args:
+            preset (int): preset from (:obj:`pyrealsense.constants.rs_ivcam_preset`)
+
+        """
         rsutilwrapper.apply_ivcam_preset(self.dev, preset)
 
     def project_point_to_pixel(self, point):

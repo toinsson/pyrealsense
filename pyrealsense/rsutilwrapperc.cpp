@@ -16,22 +16,27 @@ void _apply_ivcam_preset(rs_device * device, rs_ivcam_preset preset)
 }
 
 
-void _project_point_to_pixel(float pixel[], const struct rs_intrinsics * intrin, const float point[])
+void _project_point_to_pixel(float pixel[],
+                             const struct rs_intrinsics * intrin,
+                             const float point[])
 {
     rs_project_point_to_pixel(pixel, intrin, point);
 }
 
 
-void _deproject_pixel_to_point(float point[], const struct rs_intrinsics * intrin, const float pixel[], float depth)
+void _deproject_pixel_to_point(float point[],
+                               const struct rs_intrinsics * intrin,
+                               const float pixel[],
+                               float depth)
 {
     rs_deproject_pixel_to_point(point, intrin, pixel, depth);
 }
 
 
 void _deproject_depth(float pointcloud[],
-                            const struct rs_intrinsics * intrin,
-                            const uint16_t depth_image[],
-                            const float depth_scale)
+                      const struct rs_intrinsics * intrin,
+                      const uint16_t depth_image[],
+                      const float depth_scale)
 {
     int dx, dy;
     for(dy=0; dy<intrin->height; ++dy)

@@ -28,7 +28,8 @@ except OSError:
 
 ## try import since docs will crash here
 try:
-    import rsutilwrapper
+    from . import rsutilwrapper
 except ImportError:
     warnings.warn("rsutilwrapper not found.")
     rsutilwrapper = None
+

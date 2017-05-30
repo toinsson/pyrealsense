@@ -4,8 +4,8 @@ import ctypes
 import yaml
 from os import path
 from numpy.ctypeslib import ndpointer
-from .to_wrap import rs_intrinsics
-from .importlib import rsutilwrapper
+from .extstruct import rs_intrinsics
+from .extlib import rsutilwrapper
 
 ## global variable
 depth_intrinsics = rs_intrinsics()

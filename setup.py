@@ -1,35 +1,27 @@
-# from setuptools import setup, Extension
 from setuptools import find_packages
 from os import path, environ
 import io
-import sys
 
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Build import cythonize
 
 import numpy as np
-
-
-here = path.abspath(path.dirname(__file__))
-with io.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
 
 
 ## fetch include and library directories
 inc_dirs = [np.get_include(), '/usr/local/include/librealsense']
 lib_dirs = ['/usr/local/lib']
 
+
+## windows environment variables
 if 'PYRS_INCLUDES' in environ:
     inc_dirs.append(environ['PYRS_INCLUDES'])
 if 'PYRS_LIBS' in environ:
     lib_dirs.append(environ['PYRS_LIBS'])
 
-
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
-
-## dont build extension if on RTD
-import os
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+## cython extension, dont build if docs
+on_rtd = environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     module = []
 else:
@@ -43,6 +35,10 @@ else:
             language="c++",)
         ])
 
+## create long description from readme for pypi
+here = path.abspath(path.dirname(__file__))
+with io.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 
 setup(name='pyrealsense',
@@ -58,8 +54,7 @@ setup(name='pyrealsense',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
-        'Topic :: System :: Hardware',
+        'License :: OSem :: Hardware',
       ],
       keywords='realsense',
 
