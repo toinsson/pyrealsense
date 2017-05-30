@@ -5,7 +5,7 @@ Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](
 
 ## Prerequisites
 
-- install [librealsense] (https://github.com/IntelRealSense/librealsense#installation-guide) and run the examples.
+- install [librealsense](https://github.com/IntelRealSense/librealsense#installation-guide) and run the examples.
 
 - install the dependencies: pyrealsense uses [pycparser](https://github.com/eliben/pycparser) for extracting necessary enums and structures definitions from the librealsense API, [Cython](http://cython.org/) for wrapping the inlined functions in the librealsense API, and [Numpy](http://www.numpy.org/) for generic data shuffling.
 
