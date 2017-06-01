@@ -42,9 +42,9 @@ with io.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 
 setup(name='pyrealsense',
-      version='1.5',
+      version='2.0',
 
-      description='Simple ctypes extension to the librealsense library for Linux and Mac OS',
+      description='Cross-platform ctypes/Cython wrapper to the librealsense library.',
       long_description=long_description,
       author='Antoine Loriette',
       author_email='antoine.loriette@gmail.com',
@@ -54,12 +54,13 @@ setup(name='pyrealsense',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSem :: Hardware',
+        # 'License :: OSem :: Hardware',
       ],
       keywords='realsense',
 
       packages=find_packages(),
       ext_modules=module,
       setup_requires=['numpy', 'cython'],
-      install_requires=['numpy', 'cython', 'pycparser'],)
+      install_requires=['numpy', 'cython', 'pycparser'],
+      )
 
