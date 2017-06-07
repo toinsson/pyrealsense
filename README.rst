@@ -58,7 +58,7 @@ Online Usage
     pyrs.start()
 
     ## create a device from device id and streams of interest
-    cam = pyrs.Device(device_id = 0, streams = [pyrs.ColorStream(fps = 60)])
+    cam = pyrs.Device(device_id = 0, streams = [pyrs.stream.ColorStream(fps = 60)])
 
     ## retrieve 60 frames of data
     for _ in range(60):
