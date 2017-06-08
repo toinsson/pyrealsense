@@ -11,7 +11,7 @@ Prerequisites
 -------------
 
 -  install [librealsense]
-   (https://github.com/IntelRealSense/librealsense#installation-guide)
+  (https://github.com/IntelRealSense/librealsense#installation-guide)
    and run the examples.
 
 -  install the dependencies: pyrealsense uses
