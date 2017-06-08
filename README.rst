@@ -10,8 +10,8 @@ library.
 Prerequisites
 -------------
 
--  install [librealsense]
-   (https://github.com/IntelRealSense/librealsense#installation-guide)
+-  install
+   `librealsense <https://github.com/IntelRealSense/librealsense#installation-guide>`__
    and run the examples.
 
 -  install the dependencies: pyrealsense uses
@@ -29,7 +29,7 @@ Prerequisites
 Installation
 ------------
 
-from `PyPI <https://pypi.python.org/pypi/pyrealsense/1.4>`__ - (OBS: not
+from `PyPI <https://pypi.python.org/pypi/pyrealsense/2.0>`__ - (OBS: not
 always the latest):
 
 ::

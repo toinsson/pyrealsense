@@ -14,7 +14,7 @@ Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](
 
 ## Installation
 
-from [PyPI](https://pypi.python.org/pypi/pyrealsense/1.4) - (OBS: not always the latest):
+from [PyPI](https://pypi.python.org/pypi/pyrealsense/2.0) - (OBS: not always the latest):
 
     pip install pyrealsense
 
