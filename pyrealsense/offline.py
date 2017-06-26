@@ -3,6 +3,9 @@
 import ctypes
 import yaml
 from os import path
+
+import numpy as np
+
 from numpy.ctypeslib import ndpointer
 from .extstruct import rs_intrinsics
 from .extlib import rsutilwrapper
@@ -63,5 +66,5 @@ def deproject_depth(depth):
     pointcloud = np.zeros((height * width * 3), dtype=np.float32)
 
     rsutilwrapper.deproject_depth(pointcloud, depth_intrinsics, depth, depth_scale)
-    return pointcloud.reshape((ds.height, ds.width, 3))
+    return pointcloud.reshape((height, width, 3))
 
