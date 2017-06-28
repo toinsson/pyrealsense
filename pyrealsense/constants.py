@@ -8,20 +8,19 @@ import sys
 from os import environ, path
 
 ## construct path to librealsense/rs.h
-## for docs, use locally stored
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd:
-    rs_h_filename = './rs.h'
-## for windows, use PYRS_INCLUDE
-elif sys.platform == 'win32':
+if 'PYRS_INCLUDES' in environ:
+    rs_h_filename = path.join(environ['PYRS_INCLUDES'], 'rs.h')
 
-    if 'PYRS_INCLUDES' not in environ:
-        raise Exception('PYRS_INCLUDES must be set to the location of the librealsense headers!')
-    else:
-        rs_h_filename = path.join(environ['PYRS_INCLUDES'], 'rs.h')
-## on other platforms, fall back on default location
+## for docs, use locally stored
+elif os.environ.get('READTHEDOCS') == 'True':
+    rs_h_filename = './rs.h'
+
+elif sys.platform == 'win32':
+    raise Exception('PYRS_INCLUDES must be set to the location of the librealsense headers!')
+
 else:
     rs_h_filename = '/usr/local/include/librealsense/rs.h'
+
 
 ## if not found, exit
 if not path.exists(rs_h_filename):
