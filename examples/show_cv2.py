@@ -5,7 +5,6 @@ import time
 import numpy as np
 import cv2
 import pyrealsense as pyrs
-from pyrealsense.stream import ColorStream, DepthStream
 
 
 with pyrs.Service() as serv:
