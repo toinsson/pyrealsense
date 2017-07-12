@@ -79,7 +79,7 @@ class DACStream(Stream):
     def __init__(self, name='dac', width=640, height=480, fps=30):
         self.native = False
         self.stream = rs_stream.RS_STREAM_DEPTH_ALIGNED_TO_COLOR
-        self.format = rs_format.RS_FORMAT_XYZ32F
+        self.format = rs_format.RS_FORMAT_Z16
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
         super(DACStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
