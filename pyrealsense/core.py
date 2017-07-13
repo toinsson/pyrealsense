@@ -180,16 +180,25 @@ class DeviceBase(object):
     def __del__(self):
         self.stop()
 
+    def __str__(self):
+        return '{}(serial={}, firmware={})'.format(self.__class__.__name__,
+                                                   self.serial, self.firmware)
+
     def stop(self):
         """End data acquisition.
         Raises:
             :class:`utils.RealsenseError`: in case librealsense reports a problem.
         """
-        if self.dev != 0:
+        if self.dev:
             e = ctypes.POINTER(rs_error)()
-            lrs.rs_stop_device(self.dev, ctypes.byref(e))
+            is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
             _check_error(e)
-            self.dev = 0
+
+            if is_streaming:
+                lrs.rs_stop_device(self.dev, ctypes.byref(e))
+                _check_error(e)
+
+            self.dev = None
 
     def poll_for_frame(self):
         """Check if new frames are available, without blocking.
