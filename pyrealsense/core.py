@@ -19,24 +19,30 @@ class Service(object):
     """Context manager for librealsense service."""
     def __init__(self):
         super()
-        self.ctx = 0
+        self.ctx = None
+        self.start()
 
     def start(self):
         """Start librealsense service."""
         e = ctypes.POINTER(rs_error)()
 
-        # if not ctx:
-        lrs.rs_create_context.restype = ctypes.POINTER(rs_context)
-        self.ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
-        _check_error(e)
+        if not self.ctx:
+            lrs.rs_create_context.restype = ctypes.POINTER(rs_context)
+            self.ctx = lrs.rs_create_context(RS_API_VERSION, ctypes.byref(e))
+            _check_error(e)
+
+            # mirror librealsense behaviour of printing number of connected devices
+            n_devices = lrs.rs_get_device_count(self.ctx, ctypes.byref(e))
+            _check_error(e)
+            logger.info('There are {} connected RealSense devices.'.format(n_devices))
 
     def stop(self):
         """Stop librealsense service."""
-        if self.ctx != 0:
+        if self.ctx:
             e = ctypes.POINTER(rs_error)()
             lrs.rs_delete_context(self.ctx, ctypes.byref(e))
             _check_error(e)
-            self.ctx = 0
+            self.ctx = None
 
     def get_devices(self):
         e = ctypes.POINTER(rs_error)()
@@ -59,12 +65,11 @@ class Service(object):
 
             yield {'id': idx, 'name': name, 'serial': serial, 'firmware': version}
 
-    def device(self, *args, **kwargs):
+    def Device(self, *args, **kwargs):
         return Device(self, *args, **kwargs)
 
     def __enter__(self):
-        if self.ctx == 0:
-            self.start()
+        self.start()
         return self
 
     def __exit__(self, *args):
@@ -91,7 +96,7 @@ def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_
     """
     e = ctypes.POINTER(rs_error)()
 
-    assert service.ctx != 0, 'Service needs to be started'
+    assert service.ctx, 'Service needs to be started'
     ctx = service.ctx
 
     if streams is None:
@@ -158,7 +163,7 @@ class DeviceBase(object):
     """
     def __init__(self, dev, name, serial, version, streams):
         super(DeviceBase, self).__init__()
-        assert dev != 0, 'Device was not initialized correctly'
+        assert dev, 'Device was not initialized correctly'
 
         self.dev = dev
         self.name = name

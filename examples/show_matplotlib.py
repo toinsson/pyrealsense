@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pyrealsense as pyrs
 
 with pyrs.Service() as serv:
-    with serv.device() as dev:
+    with serv.Device() as dev:
         dev.wait_for_frames()
         plt.imshow(dev.color)
         plt.show()

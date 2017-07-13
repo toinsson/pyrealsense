@@ -10,7 +10,7 @@ import vtk.util.numpy_support as vtk_np
 import pyrealsense as pyrs
 serv = pyrs.Service()
 serv.start()
-cam = serv.device()
+cam = serv.Device()
 
 
 class VTKActorWrapper(object):
