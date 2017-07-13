@@ -124,6 +124,10 @@ def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_
     NewDevice = type(class_name, (DeviceBase,), dict())
 
     nd = NewDevice(dev, name, serial, version, streams)
+    if nd.is_streaming():
+        # Device is already running.
+        # It is not possible to enable further streams.
+        return nd
 
     # enable the stream and start device
     for s in streams:
@@ -189,16 +193,26 @@ class DeviceBase(object):
         Raises:
             :class:`utils.RealsenseError`: in case librealsense reports a problem.
         """
+        if self.dev and self.is_streaming():
+            e = ctypes.POINTER(rs_error)()
+            lrs.rs_stop_device(self.dev, ctypes.byref(e))
+            _check_error(e)
+        self.dev = None
+
+    def __nonzero__(self):
+        return self.is_streaming()
+
+    def __bool__(self):
+        return self.is_streaming()
+
+    def is_streaming(self):
         if self.dev:
             e = ctypes.POINTER(rs_error)()
             is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
             _check_error(e)
-
-            if is_streaming:
-                lrs.rs_stop_device(self.dev, ctypes.byref(e))
-                _check_error(e)
-
-            self.dev = None
+            return is_streaming
+        else:
+            return False
 
     def poll_for_frame(self):
         """Check if new frames are available, without blocking.

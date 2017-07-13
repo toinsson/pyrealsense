@@ -15,6 +15,7 @@ class Test_1_Device(TestCase):
     def test_is_not_created(self):
         service = pyrs.Service()
         cam = service.Device()
+        self.assertTrue(cam.is_streaming())
         cam.wait_for_frames()
         self.assertTrue(cam.color.any())
         cam.stop()
@@ -25,6 +26,7 @@ class Test_2_Wrapper(TestCase):
     def test_is_wrapped(self):
         service = pyrs.Service()
         cam = service.Device()
+        self.assertTrue(cam.is_streaming())
         cam.wait_for_frames()
 
         from pyrealsense import rsutilwrapper
