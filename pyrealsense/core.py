@@ -18,7 +18,7 @@ from .extlib import lrs, rsutilwrapper
 class Service(object):
     """Context manager for librealsense service."""
     def __init__(self):
-        super()
+        super(Service, self).__init__()
         self.ctx = None
         self.start()
 
