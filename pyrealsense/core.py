@@ -63,7 +63,11 @@ class Service(object):
             version = pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))
             _check_error(e)
 
-            yield {'id': idx, 'name': name, 'serial': serial, 'firmware': version}
+            is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
+            _check_error(e)
+
+            yield {'id': idx, 'name': name, 'serial': serial,
+                   'firmware': version, 'is_streaming': is_streaming}
 
     def Device(self, *args, **kwargs):
         return Device(self, *args, **kwargs)
