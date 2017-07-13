@@ -63,11 +63,25 @@ class Service(object):
             version = pp(lrs.rs_get_device_firmware_version, dev, ctypes.byref(e))
             _check_error(e)
 
-            is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
+            is_streaming = lrs.rs_is_device_streaming(dev, ctypes.byref(e))
             _check_error(e)
 
             yield {'id': idx, 'name': name, 'serial': serial,
                    'firmware': version, 'is_streaming': is_streaming}
+
+    def is_device_streaming(self, device_id):
+        """Indicates if device is streaming
+
+        Utility function which does not require to enumerate all devices
+        or to initialize a Device object
+        """
+        e = ctypes.POINTER(rs_error)()
+        lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
+        dev = lrs.rs_get_device(self.ctx, device_id, ctypes.byref(e))
+        _check_error(e)
+        is_streaming = lrs.rs_is_device_streaming(dev, ctypes.byref(e))
+        _check_error(e)
+        return is_streaming
 
     def Device(self, *args, **kwargs):
         return Device(self, *args, **kwargs)
