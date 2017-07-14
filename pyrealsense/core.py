@@ -141,7 +141,7 @@ def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_
     class_name = name.split(" ")[-1] + "-" + serial
     NewDevice = type(class_name, (DeviceBase,), dict())
 
-    nd = NewDevice(dev, name, serial, version, streams)
+    nd = NewDevice(dev, device_id, name, serial, version, streams)
     if nd.is_streaming():
         # Device is already running.
         # It is not possible to enable further streams.
@@ -183,11 +183,12 @@ class DeviceBase(object):
     """Camera device base class which should be called via the :func:`Device` factory. It
         exposes the main functions from librealsense.
     """
-    def __init__(self, dev, name, serial, version, streams):
+    def __init__(self, dev, device_id, name, serial, version, streams):
         super(DeviceBase, self).__init__()
         assert dev, 'Device was not initialized correctly'
 
         self.dev = dev
+        self.device_id = device_id
         self.name = name
         self.serial = serial
         self.version = version
