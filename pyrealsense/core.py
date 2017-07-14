@@ -14,6 +14,9 @@ from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_de
 from .utils import pp, _check_error
 from .extlib import lrs, rsutilwrapper
 
+from collections import namedtuple
+Stream_Mode = namedtuple('Stream_Mode', ['width', 'height', 'format', 'fps'])
+
 
 class Service(object):
     """Context manager for librealsense service."""
@@ -304,6 +307,25 @@ class DeviceBase(object):
             ctypes.byref(e))
         _check_error(e)
         return _rs_extrinsics
+
+    def get_device_modes(self):
+        e = ctypes.POINTER(rs_error)()
+        for stream in self.streams:
+            mode_count = lrs.rs_get_stream_mode_count(self.dev, stream.stream, ctypes.byref(e))
+            _check_error(e)
+            for idx in range(mode_count):
+                width = ctypes.c_int()
+                height = ctypes.c_int()
+                fmt = ctypes.c_int()
+                fps = ctypes.c_int()
+                lrs.rs_get_stream_mode(self.dev, stream.stream, idx,
+                                       ctypes.byref(width),
+                                       ctypes.byref(height),
+                                       ctypes.byref(fmt),
+                                       ctypes.byref(fps),
+                                       e)
+                _check_error(e)
+                yield Stream_Mode(width, height, fmt, fps)
 
     def get_device_option(self, option):
         """Get device option.
