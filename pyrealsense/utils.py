@@ -6,8 +6,9 @@ logger.addHandler(logging.NullHandler())
 import ctypes
 from .extlib import lrs
 
+
 class RealsenseError(Exception):
-    """Error thrown during the processing in case the processing chain needs to be exited. 
+    """Error thrown during the processing in case the processing chain needs to be exited.
     Will printout the error message as received from librealsense."""
     def __init__(self, function, args, message):
         self.function = function
@@ -44,7 +45,6 @@ def pp(fun, *args):
     ret = fun(*args)
     val = ctypes.cast(ret, ctypes.c_char_p).value
 
-    ## Python 2/3 difference
+    # Python 2/3 difference
     if type(val) == str: return val
     if type(val) == bytes: return val.decode("utf-8")
-
