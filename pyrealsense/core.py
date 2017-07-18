@@ -122,6 +122,12 @@ class Service(object):
     def __del__(self):
         self.stop()
 
+    def __nonzero__(self):
+        return bool(self.ctx)
+
+    def __bool__(self):
+        return bool(self.ctx)
+
 
 def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
     """Camera device, which subclass :class:`DeviceBase` and create properties for each input
@@ -254,7 +260,7 @@ class DeviceBase(object):
             e = ctypes.POINTER(rs_error)()
             is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
             _check_error(e)
-            return is_streaming
+            return bool(is_streaming)
         else:
             return False
 
