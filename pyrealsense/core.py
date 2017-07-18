@@ -15,7 +15,7 @@ from .utils import pp, _check_error
 from .extlib import lrs, rsutilwrapper
 
 from collections import namedtuple
-Stream_Mode = namedtuple('Stream_Mode', ['width', 'height', 'format', 'fps'])
+Stream_Mode = namedtuple('Stream_Mode', ['stream', 'width', 'height', 'format', 'fps'])
 
 
 class Service(object):
@@ -71,6 +71,28 @@ class Service(object):
 
             yield {'id': idx, 'name': name, 'serial': serial,
                    'firmware': version, 'is_streaming': is_streaming}
+
+    def get_device_modes(self, device_id):
+        e = ctypes.POINTER(rs_error)()
+        dev = lrs.rs_get_device(self.ctx, device_id, ctypes.byref(e))
+        _check_error(e)
+        for stream_id in range(rs_stream.RS_STREAM_COUNT):
+            mode_count = lrs.rs_get_stream_mode_count(dev, stream_id, ctypes.byref(e))
+            _check_error(e)
+            for idx in range(mode_count):
+                width = ctypes.c_int()
+                height = ctypes.c_int()
+                fmt = ctypes.c_int()
+                fps = ctypes.c_int()
+                lrs.rs_get_stream_mode(dev, stream_id, idx,
+                                       ctypes.byref(width),
+                                       ctypes.byref(height),
+                                       ctypes.byref(fmt),
+                                       ctypes.byref(fps),
+                                       e)
+                _check_error(e)
+                yield Stream_Mode(stream_id, width.value, height.value,
+                                  fmt.value, fps.value)
 
     def is_device_streaming(self, device_id):
         """Indicates if device is streaming
@@ -325,7 +347,8 @@ class DeviceBase(object):
                                        ctypes.byref(fps),
                                        e)
                 _check_error(e)
-                yield Stream_Mode(width, height, fmt, fps)
+                yield Stream_Mode(stream.stream, width.value, height.value,
+                                  fmt.value, fps.value)
 
     def get_device_option(self, option):
         """Get device option.
