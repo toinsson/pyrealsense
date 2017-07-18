@@ -406,7 +406,13 @@ class DeviceBase(object):
         def get_stream_data(s):
             e = ctypes.POINTER(rs_error)()
             lrs.rs_get_frame_data.restype = ndpointer(dtype=s.dtype, shape=s.shape)
-            return lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
+            try:
+                data = lrs.rs_get_frame_data(self.dev, s.stream, ctypes.byref(e))
+            except TypeError:
+                _check_error(e)
+                raise
+            else:
+                return data
         return lambda x: get_stream_data(s)
 
     def _get_depth_scale(self):
