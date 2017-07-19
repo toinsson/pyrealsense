@@ -8,14 +8,15 @@ import ctypes
 import numpy as np
 from numpy.ctypeslib import ndpointer
 
-from .constants import RS_API_VERSION, rs_stream
+from .constants import RS_API_VERSION, rs_stream, rs_option
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
-from .utils import pp, _check_error
+from .utils import pp, _check_error, RealsenseError
 from .extlib import lrs, rsutilwrapper
 
 from collections import namedtuple
-Stream_Mode = namedtuple('Stream_Mode', ['stream', 'width', 'height', 'format', 'fps'])
+StreamMode = namedtuple('StreamMode', ['stream', 'width', 'height', 'format', 'fps'])
+DeviceOptionRange = namedtuple('DeviceOptionRange', ['option', 'min', 'max', 'step', 'default'])
 
 
 class Service(object):
@@ -89,9 +90,9 @@ class Service(object):
                                        ctypes.byref(height),
                                        ctypes.byref(fmt),
                                        ctypes.byref(fps),
-                                       e)
+                                       ctypes.byref(e))
                 _check_error(e)
-                yield Stream_Mode(stream_id, width.value, height.value,
+                yield StreamMode(stream_id, width.value, height.value,
                                   fmt.value, fps.value)
 
     def is_device_streaming(self, device_id):
@@ -347,14 +348,42 @@ class DeviceBase(object):
                 fmt = ctypes.c_int()
                 fps = ctypes.c_int()
                 lrs.rs_get_stream_mode(self.dev, stream.stream, idx,
-                                       ctypes.byref(width),
-                                       ctypes.byref(height),
-                                       ctypes.byref(fmt),
-                                       ctypes.byref(fps),
-                                       e)
+                                      ctypes.byref(width),
+                                      ctypes.byref(height),
+                                      ctypes.byref(fmt),
+                                      ctypes.byref(fps),
+                                      ctypes.byref(e))
                 _check_error(e)
-                yield Stream_Mode(stream.stream, width.value, height.value,
-                                  fmt.value, fps.value)
+                yield StreamMode(stream.stream, width.value, height.value,
+                                 fmt.value, fps.value)
+
+    def get_available_options(self):
+        avail_opt_ranges = []
+        for option in range(rs_option.RS_OPTION_COUNT):
+            try:
+                opt_range = self.get_device_option_range_ex(option)
+            except RealsenseError:
+                pass
+            else:
+                avail_opt_ranges.append(opt_range)
+
+        avail_opt = [r.option for r in avail_opt_ranges]
+        return zip(avail_opt_ranges, self.get_device_options(avail_opt))
+
+    def get_device_options(self, options):
+        e = ctypes.POINTER(rs_error)()
+        current_values = (ctypes.c_double*len(options))()
+        option_array_type = ctypes.c_int*len(options)
+        option_array = option_array_type(*options)
+        lrs.rs_get_device_options.argtypes = [ctypes.POINTER(rs_device),
+                                              option_array_type,
+                                              ctypes.c_int,
+                                              ctypes.POINTER(ctypes.c_double),
+                                              ctypes.POINTER(ctypes.POINTER(rs_error))]
+        lrs.rs_get_device_options.restype = None
+        lrs.rs_get_device_options(self.dev, option_array, len(options), current_values, ctypes.byref(e))
+        _check_error(e)
+        return list(current_values)
 
     def get_device_option(self, option):
         """Get device option.
@@ -368,6 +397,18 @@ class DeviceBase(object):
         lrs.rs_get_device_option.restype = ctypes.c_double
         e = ctypes.POINTER(rs_error)()
         return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
+
+    def get_device_option_range_ex(self, option):
+        e = ctypes.POINTER(rs_error)()
+        min_ = ctypes.c_double()
+        max_ = ctypes.c_double()
+        step = ctypes.c_double()
+        defv = ctypes.c_double()
+        lrs.rs_get_device_option_range_ex(self.dev, option, ctypes.byref(min_),
+                                        ctypes.byref(max_), ctypes.byref(step),
+                                        ctypes.byref(defv), ctypes.byref(e))
+        _check_error(e)
+        return DeviceOptionRange(option, min_.value, max_.value, step.value, defv.value)
 
     def get_device_option_description(self, option):
         """Get the device option description.
