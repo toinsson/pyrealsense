@@ -69,15 +69,16 @@ Online Usage
     cam.stop()
     serv.stop()
 
-The server for Realsense devices is started with ``pyrs.start()`` which
-will printout the number of devices available. It can also be started as
-a context with ``with pyrs.Service():``.
+The server for Realsense devices is started with ``pyrs.Service()``
+which will printout the number of devices available. It can also be
+started as a context with ``with pyrs.Service():``.
 
-Different devices can be created from the ``Device`` factory. They are
-created as their own class defined by device id, name, serial, firmware
-as well as enabled streams and camera presets. The default behaviour
-create a device with ``id = 0`` and setup the color, depth, pointcloud,
-color\_aligned\_depth, depth\_aligned\_color and infrared streams.
+Different devices can be created from the service ``Device`` factory.
+They are created as their own class defined by device id, name, serial,
+firmware as well as enabled streams and camera presets. The default
+behaviour create a device with ``id = 0`` and setup the color, depth,
+pointcloud, color\_aligned\_depth, depth\_aligned\_color and infrared
+streams.
 
 The available streams are either native or synthetic, and each one will
 create a property that exposes the current content of the frame buffer
