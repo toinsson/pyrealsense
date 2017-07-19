@@ -34,10 +34,10 @@ logging.basicConfig(level = logging.INFO)
 import pyrealsense as pyrs
 
 ## start the service - also available as context manager
-pyrs.start()
+serv = pyrs.Service()
 
 ## create a device from device id and streams of interest
-cam = pyrs.Device(device_id = 0, streams = [pyrs.stream.ColorStream(fps = 60)])
+cam = serv.Device(device_id = 0, streams = [pyrs.stream.ColorStream(fps = 60)])
 
 ## retrieve 60 frames of data
 for _ in range(60):
@@ -46,7 +46,7 @@ for _ in range(60):
 
 ## stop camera and service
 cam.stop()
-pyrs.stop()
+serv.stop()
 ```
 
 The server for Realsense devices is started with `pyrs.start()` which will printout the number of devices available. It can also be started as a context with `with pyrs.Service():`.

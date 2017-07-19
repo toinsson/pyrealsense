@@ -40,5 +40,3 @@ with pyrs.Service() as serv:
             cv2.imshow('', cd)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-        # dev.stop()
