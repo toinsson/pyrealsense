@@ -121,6 +121,8 @@ class Service(object):
         return is_streaming
 
     def Device(self, *args, **kwargs):
+        """Factory function which returns a :obj:`Device`, also accepts optionnal arguments.
+        """
         return Device(self, *args, **kwargs)
 
     def __enter__(self):
@@ -143,9 +145,10 @@ class Service(object):
 
 def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
     """Camera device, which subclass :class:`DeviceBase` and create properties for each input
-    streams to expose their data.
+    streams to expose their data. It should be instantiated through :func:`Service.Device`.
 
     Args:
+        service (:obj:`Service`): any running service.
         device_id (int): the device id as hinted by the output from :func:`start`.
         streams (:obj:`list` of :obj:`pyrealsense.stream.Stream`): if None, all streams will be
             enabled with their default parameters (e.g `640x480@30FPS`)

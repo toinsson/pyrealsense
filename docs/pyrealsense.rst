@@ -1,8 +1,8 @@
-Pyrealsense package
-===================
+Code source docs
+================
 
-Module contents
----------------
+pyrealsense package
+-------------------
 
 .. automodule:: pyrealsense
     :members:
