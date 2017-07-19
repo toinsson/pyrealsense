@@ -15,7 +15,7 @@ from .utils import pp, _check_error
 from .extlib import lrs, rsutilwrapper
 
 from collections import namedtuple
-Stream_Mode = namedtuple('Stream_Mode', ['stream', 'width', 'height', 'format', 'fps'])
+StreamMode = namedtuple('StreamMode', ['stream', 'width', 'height', 'format', 'fps'])
 
 
 class Service(object):
@@ -91,14 +91,14 @@ class Service(object):
                                        ctypes.byref(fps),
                                        e)
                 _check_error(e)
-                yield Stream_Mode(stream_id, width.value, height.value,
+                yield StreamMode(stream_id, width.value, height.value,
                                   fmt.value, fps.value)
 
     def is_device_streaming(self, device_id):
-        """Indicates if device is streaming
+        """Indicates if device is streaming.
 
         Utility function which does not require to enumerate all devices
-        or to initialize a Device object
+        or to initialize a Device object.
         """
         e = ctypes.POINTER(rs_error)()
         lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
@@ -353,7 +353,7 @@ class DeviceBase(object):
                                        ctypes.byref(fps),
                                        e)
                 _check_error(e)
-                yield Stream_Mode(stream.stream, width.value, height.value,
+                yield StreamMode(stream.stream, width.value, height.value,
                                   fmt.value, fps.value)
 
     def get_device_option(self, option):
