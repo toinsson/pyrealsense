@@ -1,6 +1,7 @@
 import ctypes
 from .constants import rs_stream, rs_format
 
+
 class Stream(object):
     """Stream object that stores all necessary information for interaction with librealsense.
     See for possible combinations.
@@ -28,10 +29,13 @@ class Stream(object):
 class ColorStream(Stream):
     """Color stream from device, with default parameters.
     """
-    def __init__(self, name='color', width=640, height=480, fps=30):
+    def __init__(self, name='color', width=640, height=480, fps=30, use_bgr=False):
         self.native = True
         self.stream = rs_stream.RS_STREAM_COLOR
-        self.format = rs_format.RS_FORMAT_RGB8
+        if use_bgr:
+            self.format = rs_format.RS_FORMAT_BGR8
+        else:
+            self.format = rs_format.RS_FORMAT_RGB8
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
         super(ColorStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
@@ -64,10 +68,13 @@ class PointStream(Stream):
 class CADStream(Stream):
     """CAD stream from device, with default parameters.
     """
-    def __init__(self, name='cad', width=640, height=480, fps=30):
+    def __init__(self, name='cad', width=640, height=480, fps=30, use_bgr=False):
         self.native = False
         self.stream = rs_stream.RS_STREAM_COLOR_ALIGNED_TO_DEPTH
-        self.format = rs_format.RS_FORMAT_XYZ32F
+        if use_bgr:
+            self.format = rs_format.RS_FORMAT_BGR8
+        else:
+            self.format = rs_format.RS_FORMAT_RGB8
         self.shape = (height, width, 3)
         self.dtype = ctypes.c_uint8
         super(CADStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
@@ -95,4 +102,3 @@ class InfraredStream(Stream):
         self.shape = (height, width)
         self.dtype = ctypes.c_uint8
         super(InfraredStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
-

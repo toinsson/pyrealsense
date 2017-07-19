@@ -64,8 +64,12 @@ for c in ast.ext:
         for i, (_, child) in enumerate(e.children()):
             class_dict[child.name] = i
 
+        name_for_value = {}
+        for key, val in class_dict.items():
+            name_for_value[val] = key
+        class_dict['name_for_value'] = name_for_value
+
         # Generate the class and add to global scope
         class_gen = type(class_name, (object,), class_dict)
         globals()[class_name] = class_gen
         del class_gen
-
