@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""On import, you get access to start, stop, Service, Device.
+# Licensed under the Apache-2.0 License, see LICENSE for details.
+
+"""On import, you get access to the Service class which handles device creation.
 """
 
 from __future__ import absolute_import

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
+
+"""This module extract the RS_API_VERSION to which pyrealsense is binded and wraps several enums 
+from rs.h into classes with the same name."""
+
 import pycparser
 import io
 

@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
+
 """Offline module that allows to deproject stored depth arrays to pointcloud.
 """
+
 import ctypes
 import yaml
 from os import path

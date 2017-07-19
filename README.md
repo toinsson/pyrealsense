@@ -34,10 +34,10 @@ logging.basicConfig(level = logging.INFO)
 import pyrealsense as pyrs
 
 ## start the service - also available as context manager
-pyrs.start()
+serv = pyrs.Service()
 
 ## create a device from device id and streams of interest
-cam = pyrs.Device(device_id = 0, streams = [pyrs.stream.ColorStream(fps = 60)])
+cam = serv.Device(device_id = 0, streams = [pyrs.stream.ColorStream(fps = 60)])
 
 ## retrieve 60 frames of data
 for _ in range(60):
@@ -46,12 +46,12 @@ for _ in range(60):
 
 ## stop camera and service
 cam.stop()
-pyrs.stop()
+serv.stop()
 ```
 
-The server for Realsense devices is started with `pyrs.start()` which will printout the number of devices available. It can also be started as a context with `with pyrs.Service():`.
+The server for Realsense devices is started with `pyrs.Service()` which will printout the number of devices available. It can also be started as a context with `with pyrs.Service():`.
 
-Different devices can be created from the `Device` factory. They are created as their own class defined by device id, name, serial, firmware as well as enabled streams and camera presets. The default behaviour create a device with `id = 0` and setup the color, depth, pointcloud, color_aligned_depth, depth_aligned_color and infrared streams.
+Different devices can be created from the service `Device` factory. They are created as their own class defined by device id, name, serial, firmware as well as enabled streams and camera presets. The default behaviour create a device with `id = 0` and setup the color, depth, pointcloud, color_aligned_depth, depth_aligned_color and infrared streams.
 
 The available streams are either native or synthetic, and each one will create a property that exposes the current content of the frame buffer in the form of `device.<stream_name>`, where `<stream_name>` is color, depth, points, cad, dac or infrared. To get access to new data, `Device.wait_for_frames` has to be called once per frame.
 

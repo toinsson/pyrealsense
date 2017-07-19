@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
 
 import logging
 
@@ -49,6 +51,9 @@ class Service(object):
             self.ctx = None
 
     def get_devices(self):
+        """Returns a generator that yields a dictionnary containing 'id', 'name', 'serial',
+        'firmware' and 'is_streaming' keys.
+        """
         e = ctypes.POINTER(rs_error)()
         n_devices = lrs.rs_get_device_count(self.ctx, ctypes.byref(e))
         _check_error(e)
@@ -74,6 +79,13 @@ class Service(object):
                    'firmware': version, 'is_streaming': is_streaming}
 
     def get_device_modes(self, device_id):
+        """Generates all different modes for the device which `id` is provided.
+
+        Args:
+            device_id (int): the device id as hinted by the output from :func:`start` or :func:`get_devices`.
+
+        Returns: :obj:`generator` that yields all possible streaming modes as :obj:`StreamMode`.
+        """
         e = ctypes.POINTER(rs_error)()
         dev = lrs.rs_get_device(self.ctx, device_id, ctypes.byref(e))
         _check_error(e)
@@ -93,13 +105,13 @@ class Service(object):
                                        ctypes.byref(e))
                 _check_error(e)
                 yield StreamMode(stream_id, width.value, height.value,
-                                  fmt.value, fps.value)
+                                 fmt.value, fps.value)
 
     def is_device_streaming(self, device_id):
-        """Indicates if device is streaming
+        """Indicates if device is streaming.
 
         Utility function which does not require to enumerate all devices
-        or to initialize a Device object
+        or to initialize a Device object.
         """
         e = ctypes.POINTER(rs_error)()
         lrs.rs_get_device.restype = ctypes.POINTER(rs_device)
@@ -110,6 +122,8 @@ class Service(object):
         return is_streaming
 
     def Device(self, *args, **kwargs):
+        """Factory function which returns a :obj:`Device`, also accepts optionnal arguments.
+        """
         return Device(self, *args, **kwargs)
 
     def __enter__(self):
@@ -132,9 +146,10 @@ class Service(object):
 
 def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_preset=None):
     """Camera device, which subclass :class:`DeviceBase` and create properties for each input
-    streams to expose their data.
+    streams to expose their data. It should be instantiated through :func:`Service.Device`.
 
     Args:
+        service (:obj:`Service`): any running service.
         device_id (int): the device id as hinted by the output from :func:`start`.
         streams (:obj:`list` of :obj:`pyrealsense.stream.Stream`): if None, all streams will be
             enabled with their default parameters (e.g `640x480@30FPS`)
@@ -257,6 +272,11 @@ class DeviceBase(object):
         return self.is_streaming()
 
     def is_streaming(self):
+        """Indicates if device is streaming.
+
+        Returns:
+            (bool): return value of `lrs.rs_is_device_streaming`.
+        """
         if self.dev:
             e = ctypes.POINTER(rs_error)()
             is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
@@ -338,6 +358,7 @@ class DeviceBase(object):
         return _rs_extrinsics
 
     def get_device_modes(self):
+        """Returns a generator that yields all possible streaming modes as :obj:`StreamMode`."""
         e = ctypes.POINTER(rs_error)()
         for stream in self.streams:
             mode_count = lrs.rs_get_stream_mode_count(self.dev, stream.stream, ctypes.byref(e))
