@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
+
 import logging
 
 logger = logging.getLogger(__name__)

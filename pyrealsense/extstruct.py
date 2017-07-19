@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
+
+"""This module manually wraps structures defined in rs.h."""
+
 import ctypes
 
 

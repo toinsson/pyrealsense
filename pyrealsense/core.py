@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# Licensed under the Apache-2.0 License, see LICENSE for details.
 
 import logging
 
@@ -48,6 +50,9 @@ class Service(object):
             self.ctx = None
 
     def get_devices(self):
+        """Returns a generator that yields a dictionnary containing 'id', 'name', 'serial', 
+        'firmware' and 'is_streaming' keys.
+        """
         e = ctypes.POINTER(rs_error)()
         n_devices = lrs.rs_get_device_count(self.ctx, ctypes.byref(e))
         _check_error(e)
@@ -73,6 +78,13 @@ class Service(object):
                    'firmware': version, 'is_streaming': is_streaming}
 
     def get_device_modes(self, device_id):
+        """Generates all different modes for the device which `id` is provided.
+
+        Args:
+            device_id (int): the device id as hinted by the output from :func:`start` or :func:`get_devices`.
+
+        Returns: :obj:`generator` that yields all possible streaming modes as :obj:`StreamMode`.
+        """
         e = ctypes.POINTER(rs_error)()
         dev = lrs.rs_get_device(self.ctx, device_id, ctypes.byref(e))
         _check_error(e)
@@ -256,6 +268,11 @@ class DeviceBase(object):
         return self.is_streaming()
 
     def is_streaming(self):
+        """Indicates if device is streaming.
+
+        Returns:
+            (bool): return value of `lrs.rs_is_device_streaming`.
+        """
         if self.dev:
             e = ctypes.POINTER(rs_error)()
             is_streaming = lrs.rs_is_device_streaming(self.dev, ctypes.byref(e))
@@ -337,6 +354,7 @@ class DeviceBase(object):
         return _rs_extrinsics
 
     def get_device_modes(self):
+        """Returns a generator that yields all possible streaming modes as :obj:`StreamMode`."""
         e = ctypes.POINTER(rs_error)()
         for stream in self.streams:
             mode_count = lrs.rs_get_stream_mode_count(self.dev, stream.stream, ctypes.byref(e))
