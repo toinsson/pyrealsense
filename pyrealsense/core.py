@@ -15,7 +15,7 @@ from numpy.ctypeslib import ndpointer
 from .constants import RS_API_VERSION, rs_stream, rs_option
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
-from .utils import pp, _check_error, RealsenseError
+from .utils import pp, _check_error, RealsenseError, StreamMode, DeviceOptionRange
 from .extlib import lrs, rsutilwrapper
 
 
@@ -379,7 +379,7 @@ class DeviceBase(object):
             option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
 
         Returns:
-            (:obj:`list` of double): options values.
+            (:obj:`iter` of double): options values.
         """
         e = ctypes.POINTER(rs_error)()
         current_values = (ctypes.c_double*len(options))()
@@ -396,6 +396,13 @@ class DeviceBase(object):
         return iter(current_values)
 
     def set_device_options(self, options, values):
+        """Set device options.
+
+        Args:
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
+
+            values (:obj:`list` of double): options values.
+        """
         assert len(options) == len(values)
         e = ctypes.POINTER(rs_error)()
         count = len(options)
@@ -414,6 +421,11 @@ class DeviceBase(object):
         _check_error(e)
 
     def reset_device_options_to_default(self, options):
+        """Reset device options to default.
+
+        Args:
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
+        """
         e = ctypes.POINTER(rs_error)()
         count = len(options)
         option_array_type = ctypes.c_int * count
