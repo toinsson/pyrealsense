@@ -1,3 +1,4 @@
 pycparser
 numpy
 cython
+six
