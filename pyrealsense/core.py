@@ -241,19 +241,6 @@ class DeviceBase(object):
         self.version = version
         self.streams = streams
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.stop()
-
-    def __del__(self):
-        self.stop()
-
-    def __str__(self):
-        return '{}(serial={}, firmware={})'.format(self.__class__.__name__,
-                                                   self.serial, self.firmware)
-
     def stop(self):
         """End data acquisition.
         Raises:
@@ -264,12 +251,6 @@ class DeviceBase(object):
             lrs.rs_stop_device(self.dev, ctypes.byref(e))
             _check_error(e)
         self.dev = None
-
-    def __nonzero__(self):
-        return self.is_streaming()
-
-    def __bool__(self):
-        return self.is_streaming()
 
     def is_streaming(self):
         """Indicates if device is streaming.
@@ -379,6 +360,8 @@ class DeviceBase(object):
                                  fmt.value, fps.value)
 
     def get_available_options(self):
+        """Returns available options as a list of (:obj:`DeviceOptionRange`, value).
+        """
         avail_opt_ranges = []
         for option in range(rs_option.RS_OPTION_COUNT):
             try:
@@ -392,6 +375,14 @@ class DeviceBase(object):
         return zip(avail_opt_ranges, self.get_device_options(avail_opt))
 
     def get_device_options(self, options):
+        """Get device options.
+
+        Args:
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
+
+        Returns:
+            (:obj:`list` of double): options values.
+        """
         e = ctypes.POINTER(rs_error)()
         current_values = (ctypes.c_double*len(options))()
         option_array_type = ctypes.c_int*len(options)
@@ -420,6 +411,14 @@ class DeviceBase(object):
         return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
 
     def get_device_option_range_ex(self, option):
+        """Get device option range.
+
+        Args:
+            option (int): taken from :class:`pyrealsense.constants.rs_option`.
+
+        Returns:
+            (:obj:`DeviceOptionRange`): option range.
+        """
         e = ctypes.POINTER(rs_error)()
         min_ = ctypes.c_double()
         max_ = ctypes.c_double()
@@ -534,3 +533,23 @@ class DeviceBase(object):
         point = np.ones(3, dtype=np.float32) * np.NaN
         rsutilwrapper.deproject_pixel_to_point(point, self.depth_intrinsics, pixel, depth)
         return point
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
+
+    def __del__(self):
+        self.stop()
+
+    def __str__(self):
+        return '{}(serial={}, firmware={})'.format(self.__class__.__name__,
+                                                   self.serial, self.firmware)
+
+    def __nonzero__(self):
+        return self.is_streaming()
+
+    def __bool__(self):
+        return self.is_streaming()
+
