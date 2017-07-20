@@ -15,7 +15,7 @@ from numpy.ctypeslib import ndpointer
 from .constants import RS_API_VERSION, rs_stream, rs_option
 from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream, InfraredStream
 from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
-from .utils import pp, _check_error, RealsenseError
+from .utils import pp, _check_error, RealsenseError, StreamMode, DeviceOptionRange
 from .extlib import lrs, rsutilwrapper
 
 
@@ -348,11 +348,11 @@ class DeviceBase(object):
                 fmt = ctypes.c_int()
                 fps = ctypes.c_int()
                 lrs.rs_get_stream_mode(self.dev, stream.stream, idx,
-                                      ctypes.byref(width),
-                                      ctypes.byref(height),
-                                      ctypes.byref(fmt),
-                                      ctypes.byref(fps),
-                                      ctypes.byref(e))
+                                       ctypes.byref(width),
+                                       ctypes.byref(height),
+                                       ctypes.byref(fmt),
+                                       ctypes.byref(fps),
+                                       ctypes.byref(e))
                 _check_error(e)
                 yield StreamMode(stream.stream, width.value, height.value,
                                  fmt.value, fps.value)
@@ -370,7 +370,7 @@ class DeviceBase(object):
                 avail_opt_ranges.append(opt_range)
 
         avail_opt = [r.option for r in avail_opt_ranges]
-        return six.zip(avail_opt_ranges, self.get_device_options(avail_opt))
+        return six.moves.zip(avail_opt_ranges, self.get_device_options(avail_opt))
 
     def get_device_options(self, options):
         """Get device options.
@@ -379,7 +379,7 @@ class DeviceBase(object):
             option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
 
         Returns:
-            (:obj:`list` of double): options values.
+            (:obj:`iter` of double): options values.
         """
         e = ctypes.POINTER(rs_error)()
         current_values = (ctypes.c_double*len(options))()
@@ -393,7 +393,50 @@ class DeviceBase(object):
         lrs.rs_get_device_options.restype = None
         lrs.rs_get_device_options(self.dev, option_array, len(options), current_values, ctypes.byref(e))
         _check_error(e)
-        return list(current_values)
+        return iter(current_values)
+
+    def set_device_options(self, options, values):
+        """Set device options.
+
+        Args:
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
+
+            values (:obj:`list` of double): options values.
+        """
+        assert len(options) == len(values)
+        e = ctypes.POINTER(rs_error)()
+        count = len(options)
+        option_array_type = ctypes.c_int * count
+        values_array_type = ctypes.c_double * count
+
+        lrs.rs_set_device_options.argtypes = [ctypes.POINTER(rs_device),
+                                              option_array_type,
+                                              ctypes.c_int,
+                                              values_array_type,
+                                              ctypes.POINTER(ctypes.POINTER(rs_error))]
+        lrs.rs_set_device_options.restype = None
+        c_options = option_array_type(*options)
+        c_values = values_array_type(*values)
+        lrs.rs_set_device_options(self.dev, c_options, count, c_values, ctypes.byref(e))
+        _check_error(e)
+
+    def reset_device_options_to_default(self, options):
+        """Reset device options to default.
+
+        Args:
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
+        """
+        e = ctypes.POINTER(rs_error)()
+        count = len(options)
+        option_array_type = ctypes.c_int * count
+        lrs.rs_reset_device_options_to_default.argtypes = [ctypes.POINTER(rs_device),
+                                                           option_array_type,
+                                                           ctypes.c_int,
+                                                           ctypes.POINTER(ctypes.POINTER(rs_error))]
+        lrs.rs_reset_device_options_to_default.restype = None
+        c_options = option_array_type(*options)
+        lrs.rs_reset_device_options_to_default(self.dev, c_options, count, ctypes.byref(e))
+        _check_error(e)
 
     def get_device_option(self, option):
         """Get device option.
@@ -423,8 +466,8 @@ class DeviceBase(object):
         step = ctypes.c_double()
         defv = ctypes.c_double()
         lrs.rs_get_device_option_range_ex(self.dev, option, ctypes.byref(min_),
-                                        ctypes.byref(max_), ctypes.byref(step),
-                                        ctypes.byref(defv), ctypes.byref(e))
+                                          ctypes.byref(max_), ctypes.byref(step),
+                                          ctypes.byref(defv), ctypes.byref(e))
         _check_error(e)
         return DeviceOptionRange(option, min_.value, max_.value, step.value, defv.value)
 
