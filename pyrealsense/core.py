@@ -6,6 +6,8 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+import six
+
 import ctypes
 import numpy as np
 from numpy.ctypeslib import ndpointer
@@ -15,10 +17,6 @@ from .stream import ColorStream, DepthStream, PointStream, CADStream, DACStream,
 from .extstruct import rs_error, rs_intrinsics, rs_extrinsics, rs_context, rs_device
 from .utils import pp, _check_error, RealsenseError
 from .extlib import lrs, rsutilwrapper
-
-from collections import namedtuple
-StreamMode = namedtuple('StreamMode', ['stream', 'width', 'height', 'format', 'fps'])
-DeviceOptionRange = namedtuple('DeviceOptionRange', ['option', 'min', 'max', 'step', 'default'])
 
 
 class Service(object):
@@ -227,7 +225,7 @@ def Device(service, device_id=0, streams=None, depth_control_preset=None, ivcam_
 
 
 class DeviceBase(object):
-    """Camera device base class which should be called via the :func:`Device` factory. It
+    """Camera device base class which is called via the :func:`Device` factory. It
         exposes the main functions from librealsense.
     """
     def __init__(self, dev, device_id, name, serial, version, streams):
@@ -372,7 +370,7 @@ class DeviceBase(object):
                 avail_opt_ranges.append(opt_range)
 
         avail_opt = [r.option for r in avail_opt_ranges]
-        return zip(avail_opt_ranges, self.get_device_options(avail_opt))
+        return six.zip(avail_opt_ranges, self.get_device_options(avail_opt))
 
     def get_device_options(self, options):
         """Get device options.

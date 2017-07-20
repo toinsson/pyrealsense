@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # Licensed under the Apache-2.0 License, see LICENSE for details.
 
+"""This modules creates utility classes to objects that do not exists in RS API, as well as a
+wrapper for RS error and its pretty printing."""
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,6 +11,11 @@ logger.addHandler(logging.NullHandler())
 
 import ctypes
 from .extlib import lrs
+
+# syntactic sugar to classes that do not exists in RS API, see also stream.py
+from collections import namedtuple
+StreamMode = namedtuple('StreamMode', ['stream', 'width', 'height', 'format', 'fps'])
+DeviceOptionRange = namedtuple('DeviceOptionRange', ['option', 'min', 'max', 'step', 'default'])
 
 
 class RealsenseError(Exception):

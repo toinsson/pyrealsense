@@ -80,4 +80,4 @@ setup(name='pyrealsense',
       packages=find_packages(),
       ext_modules=module,
       setup_requires=['numpy', 'cython'],
-      install_requires=['numpy', 'cython', 'pycparser'])
+      install_requires=['numpy', 'cython', 'pycparser', 'six'])

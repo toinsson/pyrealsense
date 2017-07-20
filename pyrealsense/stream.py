@@ -50,7 +50,7 @@ class DepthStream(Stream):
     def __init__(self, name='depth', width=640, height=480, fps=30):
         self.native = True
         self.stream = rs_stream.RS_STREAM_DEPTH
-        self.format=rs_format.RS_FORMAT_Z16
+        self.format = rs_format.RS_FORMAT_Z16
         self.shape = (height, width)
         self.dtype = ctypes.c_uint16
         super(DepthStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
