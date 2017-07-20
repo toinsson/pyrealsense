@@ -370,7 +370,7 @@ class DeviceBase(object):
                 avail_opt_ranges.append(opt_range)
 
         avail_opt = [r.option for r in avail_opt_ranges]
-        return six.zip(avail_opt_ranges, self.get_device_options(avail_opt))
+        return six.moves.zip(avail_opt_ranges, self.get_device_options(avail_opt))
 
     def get_device_options(self, options):
         """Get device options.
