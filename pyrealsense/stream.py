@@ -32,14 +32,21 @@ class Stream(object):
 class ColorStream(Stream):
     """Color stream from device, with default parameters.
     """
-    def __init__(self, name='color', width=640, height=480, fps=30, use_bgr=False):
+    def __init__(self, name='color', width=640, height=480, fps=30, color_format='rgb'):
         self.native = True
         self.stream = rs_stream.RS_STREAM_COLOR
-        if use_bgr:
-            self.format = rs_format.RS_FORMAT_BGR8
-        else:
+        if color_format == 'rgb':
             self.format = rs_format.RS_FORMAT_RGB8
-        self.shape = (height, width, 3)
+            n_channels = 3
+        elif color_format == 'bgr':
+            self.format = rs_format.RS_FORMAT_BGR8
+            n_channels = 3
+        elif color_format == 'yuv':
+            self.format = rs_format.RS_FORMAT_YUYV
+            n_channels = 2
+        else:
+            raise ValueError('Unknown color format. Expected rgb, bgr, or yuv ({} given)').format(color_format)
+        self.shape = (height, width, n_channels)
         self.dtype = ctypes.c_uint8
         super(ColorStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
@@ -71,14 +78,21 @@ class PointStream(Stream):
 class CADStream(Stream):
     """CAD stream from device, with default parameters.
     """
-    def __init__(self, name='cad', width=640, height=480, fps=30, use_bgr=False):
+    def __init__(self, name='cad', width=640, height=480, fps=30, color_format='rgb'):
         self.native = False
         self.stream = rs_stream.RS_STREAM_COLOR_ALIGNED_TO_DEPTH
-        if use_bgr:
-            self.format = rs_format.RS_FORMAT_BGR8
-        else:
+        if color_format == 'rgb':
             self.format = rs_format.RS_FORMAT_RGB8
-        self.shape = (height, width, 3)
+            n_channels = 3
+        elif color_format == 'bgr':
+            self.format = rs_format.RS_FORMAT_BGR8
+            n_channels = 3
+        elif color_format == 'yuv':
+            self.format = rs_format.RS_FORMAT_YUYV
+            n_channels = 2
+        else:
+            raise ValueError('Unknown color format. Expected rgb, bgr, or yuv ({} given)').format(color_format)
+        self.shape = (height, width, n_channels)
         self.dtype = ctypes.c_uint8
         super(CADStream, self).__init__(name, self.native, self.stream, width, height, self.format, fps)
 
