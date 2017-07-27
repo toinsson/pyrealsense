@@ -420,24 +420,6 @@ class DeviceBase(object):
         lrs.rs_set_device_options(self.dev, c_options, count, c_values, ctypes.byref(e))
         _check_error(e)
 
-    def reset_device_options_to_default(self, options):
-        """Reset device options to default.
-
-        Args:
-            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
-        """
-        e = ctypes.POINTER(rs_error)()
-        count = len(options)
-        option_array_type = ctypes.c_int * count
-        lrs.rs_reset_device_options_to_default.argtypes = [ctypes.POINTER(rs_device),
-                                                           option_array_type,
-                                                           ctypes.c_int,
-                                                           ctypes.POINTER(ctypes.POINTER(rs_error))]
-        lrs.rs_reset_device_options_to_default.restype = None
-        c_options = option_array_type(*options)
-        lrs.rs_reset_device_options_to_default(self.dev, c_options, count, ctypes.byref(e))
-        _check_error(e)
-
     def get_device_option(self, option):
         """Get device option.
 
@@ -450,6 +432,17 @@ class DeviceBase(object):
         lrs.rs_get_device_option.restype = ctypes.c_double
         e = ctypes.POINTER(rs_error)()
         return lrs.rs_get_device_option(self.dev, option, ctypes.byref(e))
+
+    def set_device_option(self, option, value):
+        """Set device option.
+
+        Args:
+            option (int): taken from :class:`pyrealsense.constants.rs_option`.
+            value (double): value to be set for the option.
+        """
+        e = ctypes.POINTER(rs_error)()
+        lrs.rs_set_device_option(self.dev, ctypes.c_uint(option), ctypes.c_double(value), ctypes.byref(e))
+        _check_error(e)
 
     def get_device_option_range_ex(self, option):
         """Get device option range.
@@ -483,15 +476,22 @@ class DeviceBase(object):
         e = ctypes.POINTER(rs_error)()
         return pp(lrs.rs_get_device_option_description, self.dev, ctypes.c_uint(option), ctypes.byref(e))
 
-    def set_device_option(self, option, value):
-        """Set device option.
+    def reset_device_options_to_default(self, options):
+        """Reset device options to default.
 
         Args:
-            option (int): taken from :class:`pyrealsense.constants.rs_option`.
-            value (double): value to be set for the option.
+            option (:obj:`list` of int): taken from :class:`pyrealsense.constants.rs_option`.
         """
         e = ctypes.POINTER(rs_error)()
-        lrs.rs_set_device_option(self.dev, ctypes.c_uint(option), ctypes.c_double(value), ctypes.byref(e))
+        count = len(options)
+        option_array_type = ctypes.c_int * count
+        lrs.rs_reset_device_options_to_default.argtypes = [ctypes.POINTER(rs_device),
+                                                           option_array_type,
+                                                           ctypes.c_int,
+                                                           ctypes.POINTER(ctypes.POINTER(rs_error))]
+        lrs.rs_reset_device_options_to_default.restype = None
+        c_options = option_array_type(*options)
+        lrs.rs_reset_device_options_to_default(self.dev, c_options, count, ctypes.byref(e))
         _check_error(e)
 
     def _get_stream_intrinsics(self, stream):
