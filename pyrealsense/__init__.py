@@ -8,4 +8,4 @@ from __future__ import absolute_import
 from .core import Service
 from .utils import RealsenseError
 
-__version__ = '2.1'
+__version__ = '2.2'
