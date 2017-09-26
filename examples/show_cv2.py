@@ -5,12 +5,20 @@ import time
 import numpy as np
 import cv2
 import pyrealsense as pyrs
+from pyrealsense.constants import rs_option
 
 
 with pyrs.Service() as serv:
     with serv.Device() as dev:
 
         dev.apply_ivcam_preset(0)
+
+        try:  # set custom gain/exposure values to obtain good depth image
+            custom_options = [(rs_option.RS_OPTION_R200_LR_EXPOSURE, 30.0),
+                              (rs_option.RS_OPTION_R200_LR_GAIN, 100.0)]
+            dev.set_device_options(*zip(*custom_options))
+        except pyrs.RealsenseError:
+            pass  # options are not available on all devices
 
         cnt = 0
         last = time.time()
