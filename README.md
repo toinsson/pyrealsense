@@ -1,6 +1,8 @@
 # PyRealsense
 
-Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](http://cython.org/) wrapper to the [librealsense](https://github.com/IntelRealSense/librealsense) library.
+Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](http://cython.org/) wrapper to the [librealsense](https://github.com/IntelRealSense/librealsense) library - version 1.x.
+
+OBS: there is no definitive plan to support librealsense 2.x, see [issue #55](https://github.com/toinsson/pyrealsense/issues/55) for reference.
 
 
 ## Prerequisites
@@ -14,7 +16,7 @@ Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](
 
 ## Installation
 
-from [PyPI](https://pypi.python.org/pypi/pyrealsense/2.0) - (OBS: not always the latest):
+from [PyPI](https://pypi.python.org/pypi/pyrealsense/2.2) - (OBS: not always the latest):
 
     pip install pyrealsense
 
@@ -76,19 +78,17 @@ The module `offline` can store the rs_intrinsics and depth_scale of a device to 
 
 ## Examples
 
-There are 3 examples using different visualisation technologies:
-- still color with [matplotlib](http://matplotlib.org/)
-- color and depth stream with [opencv](http://opencv.org/)
-- pointcloud stream with [VTK](http://www.vtk.org/)
+The wrapper comes with some [examples](https://github.com/toinsson/pyrealsense/tree/master/examples). You will need to install [matplotlib](http://matplotlib.org/), [opencv](http://opencv.org/) and [VTK](http://www.vtk.org/) to run everything. You can also look at the [Jupyter Notebook](https://github.com/toinsson/pyrealsense/blob/master/examples/show_jupyter.ipynb).
 
 
 ## Caveats
 
-To this point, this wrapper is tested with:
+To this point, this wrapper has been tested with:
 
 - [librealsense v1.12.1](https://github.com/IntelRealSense/librealsense/tree/v1.12.1)
 - Ubuntu 16.04 LTS, Mac OS X 10.12.2 w/ SR300 camera
 - Mac OS X 10.12.3 w/ R200 camera
+- Windows 10
 
 The offline module only supports a single camera.
 
@@ -100,11 +100,5 @@ Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/p
 
 ## Possible Pull Requests
 
-- improvments to the documentation
-- more functionality from `rs.h`
-- boiler plate code (Qt example?)
-- support for several cameras in offline module
-- continuous integration for Windows and MacOs
-
-Make sure to push to the `dev` branch.
+Contributions are always welcome. Make sure to push to the `dev` branch.
 
