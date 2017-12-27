@@ -81,7 +81,7 @@ with pyrs.Service() as serv:
             cd = np.concatenate((c,d), axis=1)
             abcd = np.concatenate((ab,cd), axis=0)
 
-            cv2.putText(abcd, str(fps_smooth)[:4], (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0))
+            cv2.putText(abcd, str(fps_smooth)[:4], (0, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (127, 127, 127))
 
             cv2.imshow('', abcd)
             if cv2.waitKey(1) & 0xFF == ord('q'):
