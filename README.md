@@ -73,7 +73,7 @@ d = np.linspace(0, 1000, 480*640, dtype=np.uint16)
 pc = offline.deproject_depth(d)
 ```
 
-The module `offline` can store the rs_intrinsics and depth_scale of a device to disk by default in the user's home directory in the file `.pyrealsense`. This can later be loaded and used to deproject depth data into pointcloud, which is useful to store raw video file and save some disk memory.
+The module `offline` can store the rs_intrinsics and depth_scale of a device to disk by default in the user's home directory in the file `.pyrealsense_depth`. This can later be loaded and used to deproject depth data into pointcloud, which is useful to store raw video file and save some disk memory.
 
 
 ## Examples
