@@ -102,3 +102,5 @@ Ubuntu Trusty, python 2 and 3: [![Build Status](https://travis-ci.org/toinsson/p
 
 Contributions are always welcome. Make sure to push to the `dev` branch.
 
+## Acknowledgements
+This project has been developed as part of the E.U. Horizon 2020 research and innovation project Moregrasp (award number 643955).
