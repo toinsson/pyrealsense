@@ -11,7 +11,7 @@ OBS: there is no plan to support librealsense 2.x, as Intel already provides the
 
 - install the dependencies: pyrealsense uses [pycparser](https://github.com/eliben/pycparser) for extracting necessary enums and structures definitions from the librealsense API, [Cython](http://cython.org/) for wrapping the inlined functions in the librealsense API, and [Numpy](http://www.numpy.org/) for generic data shuffling.
 
-- Windows specifics: set environment variable PYRS_INCLUDES to the `rs.h` directory location and environment variable PYRS_LIBS to the librealsense binary location. You might also need to have `stdint.h` available in your path.
+- Windows specifics: set the environment variable PYRS_INCLUDES to the `rs.h` directory location and the environment variable PYRS_LIBS to the librealsense binary location. You might also need to have `stdint.h` available in your path.
 
 
 ## Installation
