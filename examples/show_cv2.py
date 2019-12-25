@@ -9,7 +9,7 @@ from pyrealsense.constants import rs_option
 
 
 with pyrs.Service() as serv:
-    with serv.Device() as dev:
+    with serv.Device(streams=(pyrs.stream.DepthStream(), pyrs.stream.ColorStream(), )) as dev:
 
         dev.apply_ivcam_preset(0)
 
