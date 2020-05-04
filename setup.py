@@ -1,3 +1,4 @@
+import platform
 from setuptools import find_packages
 from os import path, environ
 import io
@@ -52,7 +53,10 @@ else:
             libraries=['realsense'],
             include_dirs=inc_dirs,
             library_dirs=lib_dirs,
-            language="c++",)])
+            language="c++",
+            extra_compile_args = ['-std=c++11', "-mmacosx-version-min=10.9"] if platform.system() == "Darwin" else [],
+            extra_link_args= ["-stdlib=libc++", "-mmacosx-version-min=10.9"] if platform.system() == "Darwin" else [],
+            )])
 
 # create long description from readme for pypi
 here = path.abspath(path.dirname(__file__))
