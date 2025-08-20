@@ -1,8 +1,8 @@
-# PyRealsense
+# PyRealsense (archived)
 
 Cross-platform [ctypes](https://docs.python.org/2/library/ctypes.html)/[Cython](http://cython.org/) wrapper to the [librealsense](https://github.com/IntelRealSense/librealsense) C-library version 1.x. This wrapper is useful for legacy models such as SR300, F200 and R200.
 
-OBS: there is no plan to support librealsense 2.x, as Intel already provides the Python binding through [pyrealsense2](https://pypi.org/project/pyrealsense2/).
+OBS: This repository is archived. See Intel's newer [pyrealsense2](https://pypi.org/project/pyrealsense2/) for current camera models.
 
 
 ## Prerequisites
